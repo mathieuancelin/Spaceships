@@ -66,8 +66,6 @@
 
         var players = new HashMap()
 
-        document.body.appendChild(ship.canvas);
-
         setInterval(draw, 1000/35); 
 
         function resetCanvas (e) {  
@@ -86,7 +84,7 @@
           
             c.clearRect(0,0,canvas.width, canvas.height); 
 
-            players.forEach(function(ship, index, array) {
+            players.each(function(index, ship) {
                 //ship.targetVel.copyFromXY(x, y);
                 ship.targetVel.multiplyEq(0.2);
                 ship.update(); 
@@ -177,7 +175,15 @@
             playersSource.onmessage = function ( event ) {
                 var data = JSON.parse(event.data)
                 if (data.action == "moving") {
-                    players.put(data.name, data)
+                    console.log("moving " + data.controlx + " " + data.controly)
+                    if (!players.containsKey(data.name)) {
+                        var ship = new ShipMoving(halfWidth, halfHeight)
+                        players.put(data.name, ship) 
+                        document.body.appendChild(ship.canvas)
+                    } else {
+                        var ship = players.get(data.name)
+                        ship.targetVel.copyFromXY(data.controlx, data.controly)
+                    }
                 }
                 if (data.action == "fire") {
                     makeBullet(players.get(data.name))

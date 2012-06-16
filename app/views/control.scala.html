@@ -1,4 +1,4 @@
-@()
+@(username: String)
 
 <!DOCTYPE html>
 
@@ -56,7 +56,7 @@
     leftVector = new Vector2(0,0); 
     
         var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket    
-        var socket = new WS( "ws://" + location.host + "/mobile/toto/stream " )
+        var socket = new WS( "ws://" + location.host + "/mobile/@username/stream " )
 
 setupCanvas();
 
@@ -189,13 +189,14 @@ function onTouchStart(e) {
     for(var i = 0; i<e.changedTouches.length; i++){
         var touch =e.changedTouches[i]; 
         if((leftTouchID<0) && (touch.clientX<halfWidth)) {
+            socket.send( JSON.stringify( { action: "moving", name: "@username", controlx: leftVector.x, controly: leftVector.y } ) )
             leftTouchID = touch.identifier; 
             leftTouchStartPos.reset(touch.clientX, touch.clientY);  
             leftTouchPos.copyFrom(leftTouchStartPos); 
             leftVector.reset(0,0); 
             continue;       
         } else {
-            socket.send( JSON.stringify( { action: "fire", name: "toto", padx: touch.clientX, pady: touch.clientY } ) )
+            socket.send( JSON.stringify( { action: "fire", name: "@username", padx: touch.clientX, pady: touch.clientY } ) )
         }   
     }
     touches = e.touches; 
@@ -212,7 +213,7 @@ function onTouchMove(e) {
             leftTouchPos.reset(touch.clientX, touch.clientY); 
             leftVector.copyFrom(leftTouchPos); 
             leftVector.minusEq(leftTouchStartPos);  
-            socket.send( JSON.stringify( { action: "moving", name: "toto", controlx: leftVector.x, controly: leftVector.y } ) )
+            socket.send( JSON.stringify( { action: "moving", name: "@username", controlx: leftVector.x, controly: leftVector.y } ) )
             break;      
         }       
     }

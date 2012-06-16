@@ -17,6 +17,17 @@ function HashMap(obj) {
         this.items[key] = value;
         return previous;
     }
+    this.putIfAbsent = function(key, value, func) {
+        var previous = undefined;
+        if (this.containsKey(key)) {
+            previous = this.items[key];
+        } else {
+            this.length++;
+            func()
+        }
+        this.items[key] = value;
+        return previous;
+    }
     this.get = function(key) {
         return this.containsKey(key) ? this.items[key] : undefined;
     }

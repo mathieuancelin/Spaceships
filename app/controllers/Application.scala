@@ -34,10 +34,6 @@ object Application extends Controller {
         Ok( views.html.board() )    
     }
 
-    def controller() = Action { implicit request =>
-        Ok( views.html.control() )    
-    }
-
     def mobileStart() = Action { implicit request =>
         Ok( views.html.mobilestart() )
     }
@@ -47,7 +43,7 @@ object Application extends Controller {
     }**/
 
     def mobilePad(username: String) = Action { implicit request =>
-        Ok( views.html.control() )
+        Ok( views.html.control( username ) )
     }
 
     def startGame() = Action { implicit request =>
