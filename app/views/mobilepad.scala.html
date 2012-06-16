@@ -1,0 +1,90 @@
+@(username: String)
+
+@main(username + " you can Play !") {
+    <div id="title">
+        <h4>You are '@username'</h4>
+    </div>
+    <br/>
+    <table>
+        <tr>
+            <td></td>
+            <td><div id="up" class="btn btn-inverse"><i class="icon-arrow-up icon-white"></i></div></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td><div id="left" class="btn btn-inverse"><i class="icon-arrow-left icon-white"></i></div></td>
+            <td></td>
+            <td><div id="right" class="btn btn-inverse"><i class="icon-arrow-right icon-white"></i></div></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><div id="down" class="btn btn-inverse"><i class="icon-arrow-down icon-white"></i></div></td>
+            <td></td>
+        </tr>
+    </table>
+    <a class="btn btn-inverse" id="fire" href="#">Fire</a>
+    <br/><br/>
+    <span class="label label-important">You've been shot by 'The Dude'</span>
+
+    <script type="text/javascript">
+        var socket
+        var keyUp = false
+        var keyDown = false
+        var keyLeft = false
+        var keyRight = false
+        $(window).ready(function() {
+            if (!window.WebSocket) {
+                $('#title').html("No WebSocket support. Sorry !")
+            }
+            var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
+            socket = new WS( "ws://" + location.host + "/mobile/@username/stream " )
+            $('#up').mousedown(function() {
+                socket.send( JSON.stringify( { name: "@username", command: "MOVE", dir: "UP" } ) )
+                keyUp = true
+            })
+            $('#down').mousedown(function() {
+                socket.send( JSON.stringify( { name: "@username", command: "MOVE", dir: "DOWN" } ) )
+                keyDown = true
+            })
+            $('#left').mousedown(function() {
+                socket.send( JSON.stringify( { name: "@username", command: "MOVE", dir: "LEFT" } ) )
+                keyLeft = true
+            })
+            $('#right').mousedown(function() {
+                socket.send( JSON.stringify( { name: "@username", command: "MOVE", dir: "RIGHT" } ) )
+                keyRight = true
+            }) 
+
+            $('#up').mouseup(function() {
+                keyUp = false
+            })
+            $('#down').mouseup(function() {
+                keyDown = false
+            })
+            $('#left').mouseup(function() {
+                keyLeft = false
+            })
+            $('#right').mouseup(function() {
+                keyRight = false
+            })  
+            socket.onmessage = function(event) {
+                var data = JSON.parse(event.data)
+            }
+        }) 
+        function move() {
+            if (keyRight) {
+                socket.send( JSON.stringify( { name: "@username", command: "MOVE", dir: "RIGHT" } ) )
+            }
+            if (keyLeft) {
+                socket.send( JSON.stringify( { name: "@username", command: "MOVE", dir: "LEFT" } ) )
+            }
+            if (keyDown) {
+                socket.send( JSON.stringify( { name: "@username", command: "MOVE", dir: "DOWN" } ) )
+            }
+            if (keyUp) {
+                socket.send( JSON.stringify( { name: "@username", command: "MOVE", dir: "UP" } ) )
+            }
+        }   
+        setInterval(move, 40)
+    </script>
+}

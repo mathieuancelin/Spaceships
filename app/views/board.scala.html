@@ -1,0 +1,215 @@
+@()
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>The JUG Game</title>
+        <meta charset=utf-8>
+        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0," /> 
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("bootstrap/css/bootstrap.min.css")">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
+        <script src="@routes.Assets.at("javascripts/jquery-1.7.1.min.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/mustache.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/main.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/Vector2.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/ShipMovingTouch.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/BulletSebs.js")" type="text/javascript"></script>
+
+        <style type="text/css"> 
+    
+            * {
+              -webkit-touch-callout: none; /* prevent callout to copy image, etc when tap to hold */
+              -webkit-text-size-adjust: none; /* prevent webkit from resizing text to fit */
+              -webkit-tap-highlight-color: rgba(0,0,0,0); 
+              -webkit-user-select: none; /* prevent copy paste, to allow, change 'none' to 'text' */
+              -webkit-tap-highlight-color: rgba(0,0,0,0); 
+            }
+            body {
+                background-color: #000000;
+                margin: 0px;
+            }
+            canvas {
+                display:block; 
+                position:absolute; 
+            }
+            .container {
+                width:auto;
+                text-align:center;
+                background-color:#ff0000;
+            }
+        </style>
+    </head>
+    <body>
+    <script>
+
+        var canvas,
+            c, // c is the canvas' context 2D
+            container, 
+            halfWidth, 
+            halfHeight,
+            leftTouchID = -1, 
+            leftTouchPos = new Vector2(0,0),
+            leftTouchStartPos = new Vector2(0,0),
+            leftVector = new Vector2(0,0); 
+            
+        var x = 0
+        var y = 0    
+        
+        setupCanvas();
+
+        var mouseX, mouseY, 
+            // is this running in a touch capable environment?
+            touchable = 'createTouch' in document,
+            touches = [], // array of touch vectors
+            ship = new ShipMoving(halfWidth, halfHeight)
+            bullets = [],
+            spareBullets = [];
+
+        document.body.appendChild(ship.canvas);
+
+        setInterval(draw, 1000/35); 
+
+        function resetCanvas (e) {  
+            // resize the canvas - but remember - this clears the canvas too. 
+            canvas.width = window.innerWidth; 
+            canvas.height = window.innerHeight;
+            
+            halfWidth = canvas.width/2; 
+            halfHeight = canvas.height/2;
+            
+            //make sure we scroll to the top left. 
+            window.scrollTo(0,0); 
+        }
+
+        function draw() {
+          
+            c.clearRect(0,0,canvas.width, canvas.height); 
+
+            ship.targetVel.copyFromXY(x, y);
+            ship.targetVel.multiplyEq(0.2);
+            
+            ship.update(); 
+            
+            with(ship.pos) {
+                if(x<0) x = canvas.width; 
+                else if(x>canvas.width) x = 0;
+                if(y<0) y = canvas.height; 
+                else if (y>canvas.height) y = 0; 
+            }
+            
+            ship.draw();           
+            
+            for (var i = 0; i < bullets.length; i++) {
+                var bullet = bullets[i]; 
+                if(!bullet.enabled) continue; 
+                bullet.update(); 
+                bullet.draw(c); 
+                if(!bullet.enabled)
+                {
+                    spareBullets.push(bullet); 
+                    
+                }                
+            }
+            
+            if(touchable) {
+            
+                for(var i=0; i<touches.length; i++) {
+                    
+                    var touch = touches[i]; 
+                    
+                    if(touch.identifier == leftTouchID){
+                        c.beginPath(); 
+                        c.strokeStyle = "cyan"; 
+                        c.lineWidth = 6; 
+                        c.arc(leftTouchStartPos.x, leftTouchStartPos.y, 40,0,Math.PI*2,true); 
+                        c.stroke();
+                        c.beginPath(); 
+                        c.strokeStyle = "cyan"; 
+                        c.lineWidth = 2; 
+                        c.arc(leftTouchStartPos.x, leftTouchStartPos.y, 60,0,Math.PI*2,true); 
+                        c.stroke();
+                        c.beginPath(); 
+                        c.strokeStyle = "cyan"; 
+                        c.arc(leftTouchPos.x, leftTouchPos.y, 40, 0,Math.PI*2, true); 
+                        c.stroke(); 
+                        
+                    } else {
+                        
+                        
+
+                        c.beginPath(); 
+                        c.strokeStyle = "red";
+                        c.lineWidth = "6";
+                        c.arc(touch.clientX, touch.clientY, 40, 0, Math.PI*2, true); 
+                        c.stroke();
+                    }
+                }
+            } 
+        }
+
+        function makeBullet() {
+            
+            var bullet;
+            
+            if(spareBullets.length>0) {
+                
+                bullet = spareBullets.pop(); 
+                bullet.reset(ship.pos.x, ship.pos.y, ship.angle); 
+                
+            } else {
+                
+                bullet = new Bullet(ship.pos.x, ship.pos.y, ship.angle); 
+                bullets.push(bullet);
+
+            }
+            
+            bullet.vel.plusEq(ship.vel); 
+            
+            
+        }
+
+        function setupCanvas() {
+            
+            canvas = document.createElement( 'canvas' );
+            c = canvas.getContext( '2d' );
+            container = document.createElement( 'div' );
+            container.className = "container";
+
+            document.body.appendChild( container );
+            container.appendChild(canvas);  
+
+            resetCanvas(); 
+            
+            c.strokeStyle = "#ffffff";
+            c.lineWidth =2; 
+        }
+
+        var players = new HashMap()
+
+        $(window).ready(function() {
+            var playersSource = new EventSource( '@routes.Application.playersSSE()' )
+            playersSource.onmessage = function ( event ) {
+                var data = JSON.parse(event.data)
+                if (data.action == "moving") {
+                    x = data.controlx
+                    y = data.controly
+                    console.log("moving to " + y + " " + y)
+                }
+                if (data.action == "fire") {
+                    makeBullet()
+                    console.log("fire")
+
+                }
+
+                /**if (data.status == "killed") {
+                    players.remove(data.name)
+                } else {
+                    players.put(data.name, data)
+                }**/
+            }
+        })
+        </script>
+    </body>
+</html>

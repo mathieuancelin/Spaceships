@@ -1,0 +1,62 @@
+@()
+
+@main("The JUG Game") {
+    
+    <div id="zone">
+        <canvas id="drawing" style="border: 0px solid; background: #999999;"></canvas>
+    </div>
+    
+    <script type="text/javascript">
+        var players = new HashMap()
+        var canvas
+        var context
+        window.requestAnimFrame = (function(){
+            return window.requestAnimationFrame    || 
+                window.webkitRequestAnimationFrame || 
+                window.mozRequestAnimationFrame    || 
+                window.oRequestAnimationFrame      || 
+                window.msRequestAnimationFrame     || 
+                function(callback, element){
+                    window.setTimeout(callback, 1000 / 60);
+                };
+        })();
+        $(window).ready(function() {
+            canvas = document.getElementById('drawing')
+            var playersSource = new EventSource( '@routes.Application.playersSSE()' )
+            playersSource.onmessage = function ( event ) {
+                var data = JSON.parse(event.data)
+                //data.players.forEach(function(element, index, array) {
+                    //if (!players.containsKey(data.name)) {
+                if (data.status == "killed") {
+                    players.remove(data.name)
+                } else {
+                    players.put(data.name, data)
+                }
+                    //}
+                //})
+            }
+            init()
+            animate()
+        })
+        function draw() {
+            context.clearRect(0, 0, canvas.width, canvas.height)                
+            players.each(function(index, element) {
+                context.font = "10pt Monaco"
+                context.fillStyle = "rgb(0, 0, 0)"
+                context.fillRect( element.x, element.y, 30, 30)
+                context.fillStyle = "rgb(255, 0, 0)"
+                context.fillText(element.name, element.x, element.y -3)            
+            })
+        }
+        function init() {
+            canvas.width = 1000;
+            canvas.height = 500;
+            context = canvas.getContext( '2d' )
+        }
+        function animate() {
+            requestAnimFrame( animate )
+            draw()
+        }
+    </script>
+    
+}
