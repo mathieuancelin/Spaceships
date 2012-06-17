@@ -43,221 +43,9 @@
         </style>
     </head>
     <body>
-    <script>
+        <script>
 
-    var canvas,
-    c, // c is the canvas' context 2D
-    container, 
-    halfWidth, 
-    halfHeight,
-    leftTouchID = -1, 
-    leftTouchPos = new Vector2(0,0),
-    leftTouchStartPos = new Vector2(0,0),
-    leftVector = new Vector2(0,0); 
-    
-        var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket    
-        var socket = new WS( "ws://" + location.host + "/mobile/@username/stream " )
-
-setupCanvas();
-
-var mouseX, mouseY, 
-    // is this running in a touch capable environment?
-    touchable = 'createTouch' in document,
-    touches = [], // array of touch vectors
-    ship = new ShipMoving(halfWidth, halfHeight)
-    bullets = [],
-    spareBullets = [];
-    
-    
-setInterval(draw, 1000/35); 
-
-
-if(touchable) {
-    canvas.addEventListener( 'touchstart', onTouchStart, false );
-    canvas.addEventListener( 'touchmove', onTouchMove, false );
-    canvas.addEventListener( 'touchend', onTouchEnd, false );
-    window.onorientationchange = resetCanvas;  
-    window.onresize = resetCanvas;  
-}
-
-function resetCanvas (e) {  
-    // resize the canvas - but remember - this clears the canvas too. 
-    canvas.width = window.innerWidth; 
-    canvas.height = window.innerHeight;
-    
-    halfWidth = canvas.width/2; 
-    halfHeight = canvas.height/2;
-    
-    //make sure we scroll to the top left. 
-    window.scrollTo(0,0); 
-}
-
-function init(){
-    
-}
-
-function draw() {
-  
-    c.clearRect(0,0,canvas.width, canvas.height); 
-
-    ship.targetVel.copyFrom(leftVector);
-    ship.targetVel.multiplyEq(0.2);
-    
-    ship.update(); 
-    
-    with(ship.pos) {
-        if(x<0) x = canvas.width; 
-        else if(x>canvas.width) x = 0;
-        if(y<0) y = canvas.height; 
-        else if (y>canvas.height) y = 0; 
-    }
-    
-    ship.draw();
-    
-    
-    for (var i = 0; i < bullets.length; i++) {
-        var bullet = bullets[i]; 
-        if(!bullet.enabled) continue; 
-        bullet.update(); 
-        bullet.draw(c); 
-        if(!bullet.enabled)
-        {
-            spareBullets.push(bullet); 
-            
-        }
-        
-        
-    }
-    
-    if(touchable) {
-    
-        for(var i=0; i<touches.length; i++) {
-            
-            var touch = touches[i]; 
-            
-            if(touch.identifier == leftTouchID){
-                c.beginPath(); 
-                c.strokeStyle = "cyan"; 
-                c.lineWidth = 6; 
-                c.arc(leftTouchStartPos.x, leftTouchStartPos.y, 40,0,Math.PI*2,true); 
-                c.stroke();
-                c.beginPath(); 
-                c.strokeStyle = "cyan"; 
-                c.lineWidth = 2; 
-                c.arc(leftTouchStartPos.x, leftTouchStartPos.y, 60,0,Math.PI*2,true); 
-                c.stroke();
-                c.beginPath(); 
-                c.strokeStyle = "cyan"; 
-                c.arc(leftTouchPos.x, leftTouchPos.y, 40, 0,Math.PI*2, true); 
-                c.stroke(); 
-                
-            } else {
-                c.beginPath(); 
-                c.strokeStyle = "red";
-                c.lineWidth = "6";
-                c.arc(touch.clientX, touch.clientY, 40, 0, Math.PI*2, true); 
-                c.stroke();
-            }
-        }
-    }
-}
-
-function makeBullet() {
-    
-    var bullet;
-    
-    if(spareBullets.length>0) {
-        
-        bullet = spareBullets.pop(); 
-        bullet.reset(ship.pos.x, ship.pos.y, ship.angle); 
-        
-    } else {
-        
-        bullet = new Bullet(ship.pos.x, ship.pos.y, ship.angle); 
-        bullets.push(bullet);
-
-    }
-    
-    bullet.vel.plusEq(ship.vel); 
-    
-    
-}
-
-
-function onTouchStart(e) {
- 
-    for(var i = 0; i<e.changedTouches.length; i++){
-        var touch =e.changedTouches[i]; 
-        if((leftTouchID<0) && (touch.clientX<halfWidth)) {
-            socket.send( JSON.stringify( { action: "moving", name: "@username", controlx: leftVector.x, controly: leftVector.y } ) )
-            leftTouchID = touch.identifier; 
-            leftTouchStartPos.reset(touch.clientX, touch.clientY);  
-            leftTouchPos.copyFrom(leftTouchStartPos); 
-            leftVector.reset(0,0); 
-            continue;       
-        } else {
-            socket.send( JSON.stringify( { action: "fire", name: "@username", padx: touch.clientX, pady: touch.clientY } ) )
-        }   
-    }
-    touches = e.touches; 
-}
- 
-function onTouchMove(e) {
-     // Prevent the browser from doing its default thing (scroll, zoom)
-    e.preventDefault();
-    for(var i = 0; i<e.changedTouches.length; i++){
-        var touch =e.changedTouches[i]; 
-        if(leftTouchID == touch.identifier)
-        {
-            
-            leftTouchPos.reset(touch.clientX, touch.clientY); 
-            leftVector.copyFrom(leftTouchPos); 
-            leftVector.minusEq(leftTouchStartPos);  
-            socket.send( JSON.stringify( { action: "moving", name: "@username", controlx: leftVector.x, controly: leftVector.y } ) )
-            break;      
-        }       
-    }
-    touches = e.touches;     
-} 
- 
-function onTouchEnd(e) { 
-    touches = e.touches; 
-    for(var i = 0; i<e.changedTouches.length; i++){
-        var touch =e.changedTouches[i]; 
-        if(leftTouchID == touch.identifier)
-        {
-            leftTouchID = -1; 
-            leftVector.reset(0,0); 
-            break;      
-        }       
-    }
-}
-
-function onMouseMove(event) {
-
-    mouseX = event.offsetX;
-    mouseY = event.offsetY;
-}
-
-
-function setupCanvas() {
-    
-    canvas = document.createElement( 'canvas' );
-    c = canvas.getContext( '2d' );
-    container = document.createElement( 'div' );
-    container.className = "container";
-
-    document.body.appendChild( container );
-    container.appendChild(canvas);  
-
-    resetCanvas(); 
-    
-    c.strokeStyle = "#ffffff";
-    c.lineWidth =2; 
-}
-
-/**
-       var canvas,
+            var canvas,
             c, // c is the canvas' context 2D
             container, 
             halfWidth, 
@@ -267,151 +55,165 @@ function setupCanvas() {
             leftTouchStartPos = new Vector2(0,0),
             leftVector = new Vector2(0,0); 
 
-        var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket    
-        var socket = new WS( "ws://" + location.host + "/mobile/toto/stream " )
+            var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket    
+            var socket = new WS( "ws://" + location.host + "/mobile/@username/stream " )
 
-        var mouseX, mouseY, 
-            // is this running in a touch capable environment?
-            touchable = 'createTouch' in document,
-            touches = [], // array of touch vectors
-            //ship = new ShipMoving(halfWidth, halfHeight)
-            bullets = [],
-            spareBullets = [];
+            var x = 0
+            var y = 0
+
+            setupCanvas();
+
+            var mouseX, mouseY, 
+                // is this running in a touch capable environment?
+                touchable = 'createTouch' in document,
+                touches = [], // array of touch vectors
+                ship = new ShipMoving(halfWidth, halfHeight)
+                bullets = [],
+                spareBullets = [];
+                
+                
+            setInterval(draw, 1000/50); 
 
 
-        if(touchable) {
-            canvas.addEventListener( 'touchstart', onTouchStart, false );
-            canvas.addEventListener( 'touchmove', onTouchMove, false );
-            canvas.addEventListener( 'touchend', onTouchEnd, false );
-            window.onorientationchange = resetCanvas;  
-            window.onresize = resetCanvas;  
-        }
-
-        setupCanvas();
-        setInterval(draw, 1000/35); 
-
-        function resetCanvas (e) {  
-            // resize the canvas - but remember - this clears the canvas too. 
-            canvas.width = window.innerWidth; 
-            canvas.height = window.innerHeight;
-            
-            halfWidth = canvas.width/2; 
-            halfHeight = canvas.height/2;
-            
-            //make sure we scroll to the top left. 
-            window.scrollTo(0,0); 
-        }
-
-        function draw() {
-          
-            c.clearRect(0,0,canvas.width, canvas.height); 
-            
             if(touchable) {
-            
-                for(var i=0; i<touches.length; i++) {
-                    
-                    var touch = touches[i]; 
-                    
-                    if(touch.identifier == leftTouchID){
-                        c.beginPath(); 
-                        c.strokeStyle = "cyan"; 
-                        c.lineWidth = 6; 
-                        c.arc(leftTouchStartPos.x, leftTouchStartPos.y, 40,0,Math.PI*2,true); 
-                        c.stroke();
-                        c.beginPath(); 
-                        c.strokeStyle = "cyan"; 
-                        c.lineWidth = 2; 
-                        c.arc(leftTouchStartPos.x, leftTouchStartPos.y, 60,0,Math.PI*2,true); 
-                        c.stroke();
-                        c.beginPath(); 
-                        c.strokeStyle = "cyan"; 
-                        c.arc(leftTouchPos.x, leftTouchPos.y, 40, 0,Math.PI*2, true); 
-                        c.stroke(); 
+                canvas.addEventListener( 'touchstart', onTouchStart, false );
+                canvas.addEventListener( 'touchmove', onTouchMove, false );
+                canvas.addEventListener( 'touchend', onTouchEnd, false );
+                window.onorientationchange = resetCanvas;  
+                window.onresize = resetCanvas;  
+                //window.onscroll = resetCanvas;  
+            }
+
+            function resetCanvas (e) {  
+                // resize the canvas - but remember - this clears the canvas too. 
+                canvas.width = window.innerWidth + 40; 
+                canvas.height = window.innerHeight + 40;
+                
+                halfWidth = canvas.width/2; 
+                halfHeight = canvas.height/2;
+                
+                //make sure we scroll to the top left. 
+                window.scrollTo(0,0); 
+            }
+
+            function draw() {
+              
+                c.clearRect(0,0,canvas.width, canvas.height); 
+
+                socket.send( JSON.stringify( { action: "moving", name: "@username", controlx: x, controly: y } ) )
+                
+                if(touchable) {
+                
+                    for(var i=0; i<touches.length; i++) {
                         
-                    } else {
+                        var touch = touches[i]; 
                         
-                        c.beginPath(); 
-                        c.strokeStyle = "red";
-                        c.lineWidth = "6";
-                        c.arc(touch.clientX, touch.clientY, 40, 0, Math.PI*2, true); 
-                        c.stroke();
+                        if(touch.identifier == leftTouchID){
+                            c.beginPath(); 
+                            c.strokeStyle = "blue"; 
+                            c.lineWidth = 6; 
+                            c.arc(leftTouchStartPos.x, leftTouchStartPos.y, 40,0,Math.PI*2,true); 
+                            c.stroke();
+                            c.beginPath(); 
+                            c.strokeStyle = "blue"; 
+                            c.lineWidth = 2; 
+                            c.arc(leftTouchStartPos.x, leftTouchStartPos.y, 60,0,Math.PI*2,true); 
+                            c.stroke();
+                            c.beginPath(); 
+                            c.strokeStyle = "cyan"; 
+                            c.arc(leftTouchPos.x, leftTouchPos.y, 40, 0,Math.PI*2, true); 
+                            c.stroke(); 
+                            c.beginPath(); 
+                            c.strokeStyle = "blue"; 
+                            c.lineWidth = 1;
+                            c.moveTo(leftTouchStartPos.x, leftTouchStartPos.y)
+                            c.lineTo(leftTouchPos.x, leftTouchPos.y)
+                            c.strokeStyle = "blue"; 
+                            c.moveTo(leftTouchPos.x - 40, leftTouchPos.y)
+                            c.lineTo(leftTouchPos.x + 40, leftTouchPos.y)
+                            c.moveTo(leftTouchPos.x, leftTouchPos.y +  40)
+                            c.lineTo(leftTouchPos.x, leftTouchPos.y - 40)
+                            c.stroke()
+                        } else {
+                            c.beginPath(); 
+                            c.strokeStyle = "red";
+                            c.lineWidth = "6";
+                            c.arc(touch.clientX, touch.clientY, 40, 0, Math.PI*2, true); 
+                            c.stroke();
+                        }
                     }
                 }
-            }         
-        }
-
-        function onTouchStart(e) {
-         
-            for(var i = 0; i<e.changedTouches.length; i++){
-                var touch =e.changedTouches[i]; 
-                //console.log(leftTouchID + " " 
-                if((leftTouchID<0) && (touch.clientX<halfWidth))
-                {
-                    leftTouchID = touch.identifier; 
-                    leftTouchStartPos.reset(touch.clientX, touch.clientY);  
-                    leftTouchPos.copyFrom(leftTouchStartPos); 
-                    leftVector.reset(0,0); 
-                    continue;       
-                } else {
-                    //makeBullet(); 
-                    socket.send( JSON.stringify( { action: "fire", name: "toto", padx: touch.clientX, pady: touch.clientY } ) )
-                }   
             }
-            touches = e.touches; 
-        }
-         
-        function onTouchMove(e) {
-             // Prevent the browser from doing its default thing (scroll, zoom)
-            e.preventDefault();
-            
-            for(var i = 0; i<e.changedTouches.length; i++){
-                var touch =e.changedTouches[i]; 
-                if(leftTouchID == touch.identifier)
-                {
-                    socket.send( JSON.stringify( { action: "moving", name: "toto", controlx: touch.clientX, controly: touch.clientY } ) )
-                    leftTouchPos.reset(touch.clientX, touch.clientY); 
-                    leftVector.copyFrom(leftTouchPos); 
-                    leftVector.minusEq(leftTouchStartPos);  
-                    break;      
-                }       
+
+            function onTouchStart(e) {
+             
+                for(var i = 0; i<e.changedTouches.length; i++){
+                    var touch =e.changedTouches[i]; 
+                    if((leftTouchID<0) && (touch.clientX<halfWidth)) {
+                        //socket.send( JSON.stringify( { action: "moving", name: "@username", controlx: leftVector.x, controly: leftVector.y } ) )
+                        x = leftVector.x
+                        y = leftVector.y
+                        leftTouchID = touch.identifier; 
+                        leftTouchStartPos.reset(touch.clientX, touch.clientY);  
+                        leftTouchPos.copyFrom(leftTouchStartPos); 
+                        leftVector.reset(0,0); 
+                        continue;       
+                    } else {
+                        socket.send( JSON.stringify( { action: "fire", name: "@username", padx: touch.clientX, pady: touch.clientY } ) )
+                    }   
+                }
+                touches = e.touches; 
             }
-            
-            touches = e.touches; 
-            
-        } 
-         
-        function onTouchEnd(e) { 
-           
-            touches = e.touches; 
-
-            for(var i = 0; i<e.changedTouches.length; i++){
-                var touch =e.changedTouches[i]; 
-                if(leftTouchID == touch.identifier)
-                {
-                    leftTouchID = -1; 
-                    leftVector.reset(0,0); 
-                    break;      
-                }       
+             
+            function onTouchMove(e) {
+                 // Prevent the browser from doing its default thing (scroll, zoom)
+                e.preventDefault();
+                for(var i = 0; i<e.changedTouches.length; i++){
+                    var touch =e.changedTouches[i]; 
+                    if(leftTouchID == touch.identifier)
+                    {
+                        leftTouchPos.reset(touch.clientX, touch.clientY); 
+                        leftVector.copyFrom(leftTouchPos); 
+                        leftVector.minusEq(leftTouchStartPos);  
+                        //socket.send( JSON.stringify( { action: "moving", name: "@username", controlx: leftVector.x, controly: leftVector.y } ) )
+                        x = leftVector.x
+                        y = leftVector.y
+                        break;      
+                    }       
+                }
+                touches = e.touches;     
+            } 
+             
+            function onTouchEnd(e) { 
+                touches = e.touches; 
+                for(var i = 0; i<e.changedTouches.length; i++){
+                    var touch =e.changedTouches[i]; 
+                    if(leftTouchID == touch.identifier)
+                    {
+                        leftTouchID = -1; 
+                        leftVector.reset(0,0); 
+                        x = 0
+                        y = 0
+                        break;      
+                    }       
+                }
             }
-           
-        }
 
-        function setupCanvas() {
-            
-            canvas = document.createElement( 'canvas' );
-            c = canvas.getContext( '2d' );
-            container = document.createElement( 'div' );
-            container.className = "container";
+            function setupCanvas() {
+                
+                canvas = document.createElement( 'canvas' );
+                c = canvas.getContext( '2d' );
+                container = document.createElement( 'div' );
+                container.className = "container";
 
-            document.body.appendChild( container );
-            container.appendChild(canvas);  
+                document.body.appendChild( container );
+                container.appendChild(canvas);  
 
-            resetCanvas(); 
-            
-            c.strokeStyle = "#ffffff";
-            c.lineWidth =2; 
-        }**/
-
+                resetCanvas(); 
+                
+                c.strokeStyle = "#ffffff";
+                c.lineWidth =2; 
+            }
         </script>
     </body>
 </html>

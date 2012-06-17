@@ -94,7 +94,8 @@
                     if(y<0) y = canvas.height; 
                     else if (y>canvas.height) y = 0; 
                 }
-                ship.draw();  
+                ship.draw(); 
+
             })         
             
             for (var i = 0; i < bullets.length; i++) {
@@ -178,6 +179,7 @@
                     console.log("moving " + data.controlx + " " + data.controly)
                     if (!players.containsKey(data.name)) {
                         var ship = new ShipMoving(halfWidth, halfHeight)
+                        ship.updateName(data.name)
                         players.put(data.name, ship) 
                         document.body.appendChild(ship.canvas)
                     } else {

@@ -6,6 +6,7 @@ ShipMoving = function(x,y) {
 	var vel = this.vel = new Vector2(0,0);
 	var targetVel = this.targetVel = new Vector2(0,0);  
 	var temp = new Vector2(0,0); 
+	var name = "Anonymous"
 	
 	var thrustSize = 0; 
 	
@@ -20,6 +21,10 @@ ShipMoving = function(x,y) {
 	this.c = c;  
 	 
 	var counter = 0; 
+
+	this.updateName = function(n) {
+		name = n
+	}
 
 	this.update = function() {
 		//speed limit
@@ -62,6 +67,7 @@ ShipMoving = function(x,y) {
 		c.lineWidth = 2; 
 		
 		c.beginPath();
+		c.fillText(name, 0, -15) 
 		c.moveTo(-10, -10);
 		c.lineTo(-10, 10);
 		c.lineTo(14, 0);

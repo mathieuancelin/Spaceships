@@ -80,6 +80,7 @@ object Application extends Controller {
         var out = Enumerator.imperative[JsValue]( )
         var in = Iteratee.foreach[JsValue] ( _ match {
             case message: JsObject => {
+                //println( message )
                 playersEnumerator.push( message )
                 /**val key = "playerWithUsername" + username
                 if ( players.containsKey( key ) ) {
