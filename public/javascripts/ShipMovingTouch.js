@@ -12,7 +12,7 @@ ShipMoving = function(x,y) {
 	
 	var thrustSize = 0; 
 
-	var draw = true
+	var drawing = true
 	
 	var canvas = this.canvas = document.createElement("canvas"); 
 	
@@ -64,7 +64,7 @@ ShipMoving = function(x,y) {
 	// c = canvas context
 	this.draw = function() {	
 
-		if (draw) {	
+		if (drawing == true) {	
 			
 			c.clearRect(0,0,60,60); 
 			//c.fillStyle = "rgba(255,255,255,0.5)";
@@ -114,17 +114,12 @@ ShipMoving = function(x,y) {
 	};
 
 	this.around = function(vx, vy) {
-		if (vx >= (pos.x - 40) && vx <= (pos.x + 40)) {
-			if (vy >= (pos.y - 40) && vx <= (pos.y + 40)) {
-				return true
-			}
+		var downx = (this.pos.x - 40)
+		var upx = (this.pos.x + 40)
+		var downy = (this.pos.y - 40)
+		var upy = (this.pos.y + 40)
+		if (vx > downx && vx < upx && vy > downy  && vy < upy ) {
+			this.drawing = false
 		}
-		return false
 	}
-
-	this.kill = function() {
-		draw = false
-	}
-
-
 }; 

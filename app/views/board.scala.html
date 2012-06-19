@@ -95,6 +95,10 @@
                     else if (y>canvas.height) y = 0; 
                 }
                 ship.draw(); 
+                c.beginPath()
+                c.arc(ship.pos.x, ship.pos.y, 40, 0, Math.PI*2,true)
+                c.closePath()
+                c.stroke()
 
             })         
             
@@ -109,9 +113,7 @@
                     
                 }     
                 players.each(function(index, elem) {
-                    if (elem.around(bullet.pos.x, bullet.pos.y)) {
-                        elem.kill()
-                    }
+                    elem.around(bullet.pos.x, bullet.pos.y)
                 })           
             }
             
