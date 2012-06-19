@@ -44,6 +44,8 @@
     <body>
     <script>
 
+        var debug = false
+
         var canvas,
             c, // c is the canvas' context 2D
             container, 
@@ -95,11 +97,12 @@
                     else if (y>canvas.height) y = 0; 
                 }
                 ship.draw(); 
-                c.beginPath()
-                c.arc(ship.pos.x, ship.pos.y, 40, 0, Math.PI*2,true)
-                c.closePath()
-                c.stroke()
-
+                if (debug) {
+                    c.beginPath()
+                    c.arc(ship.pos.x, ship.pos.y, 40, 0, Math.PI*2,true)
+                    c.closePath()
+                    c.stroke()
+                }
             })         
             
             for (var i = 0; i < bullets.length; i++) {
@@ -113,7 +116,10 @@
                     
                 }     
                 players.each(function(index, elem) {
-                    elem.around(bullet.pos.x, bullet.pos.y)
+                    var dead = elem.around(bullet.pos.x, bullet.pos.y)
+                    if (dead) {
+                        $.post("/mobile/" + elem.name + "/pad/kill")
+                    }
                 })           
             }
             

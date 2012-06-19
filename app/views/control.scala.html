@@ -60,6 +60,7 @@
 
             var x = 0
             var y = 0
+            var status = "alive"
 
             var websocketCapable = true
             if (!window.WebSocket) {
@@ -67,6 +68,14 @@
             } else {
                 var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
                 socket = new WS( "ws://" + location.host + "/mobile/@username/stream " )
+                socket.onmessage = function( event ) {
+                    var sent = JSON.parse( event.data )
+                    console.log( sent )
+                    if (sent.action == "kill") {
+                        console.log("pouet")
+                        status = "dead"
+                    }
+                }
             }
 
             setupCanvas();
@@ -115,6 +124,11 @@
                     c.fillText("WebSocket", 3, 13) 
                 } else {
                     c.fillText("AJAX", 3, 13) 
+                }
+                if (status == "dead") {
+                    c.font = "25pt Calibri";
+                    c.fillStyle = "#ff0000";
+                    c.fillText("YOU'RE DEAD", 30, halfHeight) 
                 }
                 c.closePath(); 
                 c.stroke();

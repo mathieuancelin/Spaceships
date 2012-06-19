@@ -17,6 +17,7 @@ import play.api.libs.json._
 import utils._
 import akka.actor._
 import java.util.concurrent.ConcurrentHashMap
+import scala.collection.immutable.{ List => JList }
 
 object Application extends Controller {
 
@@ -31,6 +32,8 @@ object Application extends Controller {
     val playersHub = Concurrent.hub[JsValue]( playersEnumerator )
     val bulletsHub = Concurrent.hub[JsValue]( bulletsEnumerator )
     val players = new ConcurrentHashMap[String, ActorRef]
+
+    var playersENumerators = new ConcurrentHashMap[String, PushEnumerator[JsValue]]
 
     def index() = Action { implicit request =>
         Ok( views.html.board() )    
@@ -79,7 +82,7 @@ object Application extends Controller {
     }
 
     def mobilePadStream( username: String ) = WebSocket.async[JsValue] { request =>
-        var out = Enumerator.imperative[JsValue]( )
+        var out = createUserIfAbsent( username )
         var in = Iteratee.foreach[JsValue] ( _ match {
             case message: JsObject => {
                 //println( message )
@@ -99,6 +102,7 @@ object Application extends Controller {
     }
 
     def padAction( username: String ) = Action { implicit request =>
+        createUserIfAbsent( username )
         actionForm.bindFromRequest.fold (
             formWithErrors => BadRequest,
             { action =>
@@ -106,5 +110,20 @@ object Application extends Controller {
                 Ok
             } 
         )
+    }
+
+    def createUserIfAbsent( username: String ) = {
+        if ( !playersENumerators.containsKey( username ) ) {
+            playersENumerators.put( username, Enumerator.imperative[JsValue]( ) )
+        } else {
+            playersENumerators.get( username )
+        }
+    }
+
+    def kill( username: String ) = Action { implicit request =>
+        println( "killing " + username)
+        val out = playersENumerators.get( username )
+        out.push( JsObject( JList( "action" -> JsString( "kill" ) ) ) )
+        Ok
     }
 }
