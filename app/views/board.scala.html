@@ -192,7 +192,10 @@
                     if (!players.containsKey(data.name)) {
                         var ship = new ShipMoving(halfWidth, halfHeight)
                         ship.updateName(data.name)
-                        ship.updateColor('#'+Math.floor(Math.random()*16777215).toString(16))
+                        var r = (Math.floor(Math.random()*175) + 80).toString(16)
+                        var g = (Math.floor(Math.random()*175) + 80).toString(16)
+                        var b = (Math.floor(Math.random()*175) + 80).toString(16)
+                        ship.updateColor('#'+ r + g + b)
                         players.put(data.name, ship) 
                         document.body.appendChild(ship.canvas)
                     } else {
