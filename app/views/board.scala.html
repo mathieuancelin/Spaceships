@@ -181,7 +181,6 @@
             playersSource.onmessage = function ( event ) {
                 var data = JSON.parse(event.data)
                 if (data.action == "moving") {
-                    console.log("moving " + data.controlx + " " + data.controly)
                     if (!players.containsKey(data.name)) {
                         var ship = new ShipMoving(halfWidth, halfHeight)
                         ship.updateName(data.name)

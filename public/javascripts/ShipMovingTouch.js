@@ -81,7 +81,7 @@ ShipMoving = function(x,y) {
 			c.lineWidth = 2; 
 			
 			c.beginPath();
-			c.fillText(name, 0, -15) 
+			c.fillText(name, -10, -15) 
 			c.moveTo(-10, -10);
 			c.lineTo(-10, 10);
 			c.lineTo(14, 0);
@@ -114,8 +114,8 @@ ShipMoving = function(x,y) {
 	};
 
 	this.around = function(vx, vy) {
-		if (vx >= (pos.x - 10) && vx <= (pos.x + 10)) {
-			if (vy >= (pos.y - 10) && vx <= (pos.y + 10)) {
+		if (vx >= (pos.x - 40) && vx <= (pos.x + 40)) {
+			if (vy >= (pos.y - 40) && vx <= (pos.y + 40)) {
 				return true
 			}
 		}
