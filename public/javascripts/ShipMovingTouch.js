@@ -11,6 +11,8 @@ ShipMoving = function(x,y) {
 	var color = "rgb(255,255,255)"
 	
 	var thrustSize = 0; 
+
+	var draw = true
 	
 	var canvas = this.canvas = document.createElement("canvas"); 
 	
@@ -60,54 +62,69 @@ ShipMoving = function(x,y) {
 	
 
 	// c = canvas context
-	this.draw = function() {		
-		
-		c.clearRect(0,0,60,60); 
-		//c.fillStyle = "rgba(255,255,255,0.5)";
-		c.lineCap = 'square'
-        c.font = "12pt Calibri";
-		c.fillStyle = color;
-		//c.fillRect(0,0,60,60); 
-		c.save();
-		c.translate(30, 30); 
-		//this.c.rotate(this.angle * Vector2Const.TO_RADIANS);
+	this.draw = function() {	
 
-		//c.strokeStyle = "#fff"; 
-		c.strokeStyle = color; 
-		c.lineWidth = 2; 
-		
-		c.beginPath();
-		c.fillText(name, 0, -15) 
-		c.moveTo(-10, -10);
-		c.lineTo(-10, 10);
-		c.lineTo(14, 0);
-		c.closePath(); 
-		c.stroke();
-	
-		if(thrustSize>0) {
+		if (draw) {	
+			
+			c.clearRect(0,0,60,60); 
+			//c.fillStyle = "rgba(255,255,255,0.5)";
+			c.lineCap = 'square'
+	        c.font = "12pt Calibri";
+			c.fillStyle = color;
+			//c.fillRect(0,0,60,60); 
+			c.save();
+			c.translate(30, 30); 
+			//this.c.rotate(this.angle * Vector2Const.TO_RADIANS);
 
+			//c.strokeStyle = "#fff"; 
+			c.strokeStyle = color; 
+			c.lineWidth = 2; 
+			
 			c.beginPath();
-			c.moveTo(-10, -6);
-			
-			c.lineTo(-10 - (thrustSize/((counter%2)+1)) , 0);
-			
-			c.lineTo(-10, 6);
-			//c.closePath(); 
+			c.fillText(name, 0, -15) 
+			c.moveTo(-10, -10);
+			c.lineTo(-10, 10);
+			c.lineTo(14, 0);
+			c.closePath(); 
 			c.stroke();
-			counter++; 
+		
+			if(thrustSize>0) {
+
+				c.beginPath();
+				c.moveTo(-10, -6);
+				
+				c.lineTo(-10 - (thrustSize/((counter%2)+1)) , 0);
+				
+				c.lineTo(-10, 6);
+				//c.closePath(); 
+				c.stroke();
+				counter++; 
+			}
+			
+			c.restore();
+			
+			var posx = Math.round(pos.x-30); 
+			var posy = Math.round(pos.y-30); 
+			
+			var styleStr = "translate3d("+posx+"px, "+posy+"px, 0px) rotate("+this.angle+"deg)"; 
+			canvas.style.webkitTransform = canvas.style.MozTransform = canvas.style.OTransform = canvas.style.transform = styleStr; 
+			//console.log(styleStr); 
+			
 		}
-		
-		c.restore();
-		
-		var posx = Math.round(pos.x-30); 
-		var posy = Math.round(pos.y-30); 
-		
-		var styleStr = "translate3d("+posx+"px, "+posy+"px, 0px) rotate("+this.angle+"deg)"; 
-		canvas.style.webkitTransform = canvas.style.MozTransform = canvas.style.OTransform = canvas.style.transform = styleStr; 
-		//console.log(styleStr); 
-		
-		
 	};
+
+	this.around = function(vx, vy) {
+		if (vx >= (pos.x - 10) && vx <= (pos.x + 10)) {
+			if (vy >= (pos.y - 10) && vx <= (pos.y + 10)) {
+				return true
+			}
+		}
+		return false
+	}
+
+	this.kill = function() {
+		draw = false
+	}
 
 
 }; 

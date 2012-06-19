@@ -107,7 +107,12 @@
                 {
                     spareBullets.push(bullet); 
                     
-                }                
+                }     
+                players.each(function(index, elem) {
+                    if (elem.around(bullet.pos.x, bullet.pos.y)) {
+                        elem.kill()
+                    }
+                })           
             }
             
             if(touchable) {
