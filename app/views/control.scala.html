@@ -55,8 +55,8 @@
             leftTouchStartPos = new Vector2(0,0),
             leftVector = new Vector2(0,0); 
 
-            var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket    
-            var socket = new WS( "ws://" + location.host + "/mobile/@username/stream " )
+            //var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket    
+            var socket// = new WS( "ws://" + location.host + "/mobile/@username/stream " )
 
             var x = 0
             var y = 0
@@ -64,6 +64,9 @@
             var websocketCapable = true
             if (!window.WebSocket) {
                 websocketCapable = false
+            } else {
+                var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
+                socket = new WS( "ws://" + location.host + "/mobile/@username/stream " )
             }
 
             setupCanvas();
@@ -103,7 +106,18 @@
 
             function draw() {
               
-                c.clearRect(0,0,canvas.width, canvas.height); 
+                c.clearRect(0,0,canvas.width, canvas.height);
+                c.lineCap = 'square'
+                c.font = "12pt Calibri";
+                c.fillStyle = "#fff"; 
+                c.beginPath();
+                if (websocketCapable) {
+                    c.fillText("WebSocket", 3, 13) 
+                } else {
+                    c.fillText("AJAX", 3, 13) 
+                }
+                c.closePath(); 
+                c.stroke();
 
                 //socket.send( JSON.stringify( { action: "moving", name: "@username", controlx: x, controly: y } ) )
                 move(x, y)
@@ -223,21 +237,19 @@
             }
 
             function move(vx, vy) {
-                var message = JSON.stringify( { action: "moving", name: "@username", controlx: vx, controly: vy } )
-                if (websocketCapable) {
-                    socket.send( message )
-                } else {
-                    $.post("@routes.Application.padAction(username)", { message: message })
-                }
+                action("moving", vx, vy)
             }
 
             function fire(vx, vy) {
-                var message = JSON.stringify( { action: "fire", name: "@username", padx: vx, pady: vy } )
+                action("fire", vx, vy)
+            }
+
+            function action(act, vx, vy) {
+                var message = JSON.stringify( { action: act, name: "@username", x: vx, y: vy } )
                 if (websocketCapable) {
                     socket.send( message )
                 } else {
                     $.post("@routes.Application.padAction(username)", { message: message })
-                    routes
                 }
             }
         </script>

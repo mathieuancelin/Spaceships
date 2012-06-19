@@ -185,7 +185,7 @@
                         document.body.appendChild(ship.canvas)
                     } else {
                         var ship = players.get(data.name)
-                        ship.targetVel.copyFromXY(data.controlx, data.controly)
+                        ship.targetVel.copyFromXY(data.x, data.y)
                     }
                 }
                 if (data.action == "fire") {
