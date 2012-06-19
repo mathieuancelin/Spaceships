@@ -24,6 +24,8 @@ object Application extends Controller {
     val YMAX = 500
 
     val usernameForm = Form( "username" -> text )  
+    val actionForm = Form( "message" -> text )  
+
     val playersEnumerator = Enumerator.imperative[JsValue]( )
     val bulletsEnumerator = Enumerator.imperative[JsValue]( )
     val playersHub = Concurrent.hub[JsValue]( playersEnumerator )
@@ -94,5 +96,15 @@ object Application extends Controller {
             }
         })
         Promise.pure( ( in, out ) )
+    }
+
+    def padAction( username: String ) = Action { implicit request =>
+        actionForm.bindFromRequest.fold (
+            formWithErrors => BadRequest,
+            { action =>
+                playersEnumerator.push( Json.parse( action ) )
+                Ok
+            } 
+        )
     }
 }

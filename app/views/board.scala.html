@@ -180,6 +180,7 @@
                     if (!players.containsKey(data.name)) {
                         var ship = new ShipMoving(halfWidth, halfHeight)
                         ship.updateName(data.name)
+                        ship.updateColor('#'+Math.floor(Math.random()*16777215).toString(16))
                         players.put(data.name, ship) 
                         document.body.appendChild(ship.canvas)
                     } else {

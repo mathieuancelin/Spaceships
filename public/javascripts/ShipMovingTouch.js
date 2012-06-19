@@ -7,6 +7,8 @@ ShipMoving = function(x,y) {
 	var targetVel = this.targetVel = new Vector2(0,0);  
 	var temp = new Vector2(0,0); 
 	var name = "Anonymous"
+
+	var color = "rgb(255,255,255)"
 	
 	var thrustSize = 0; 
 	
@@ -24,6 +26,10 @@ ShipMoving = function(x,y) {
 
 	this.updateName = function(n) {
 		name = n
+	}
+
+	this.updateColor = function(n) {
+		color = n
 	}
 
 	this.update = function() {
@@ -57,13 +63,17 @@ ShipMoving = function(x,y) {
 	this.draw = function() {		
 		
 		c.clearRect(0,0,60,60); 
-		c.fillStyle = "rgba(255,255,255,0.5)";
+		//c.fillStyle = "rgba(255,255,255,0.5)";
+		c.lineCap = 'square'
+        c.font = "12pt Calibri";
+		c.fillStyle = color;
 		//c.fillRect(0,0,60,60); 
 		c.save();
 		c.translate(30, 30); 
 		//this.c.rotate(this.angle * Vector2Const.TO_RADIANS);
 
-		c.strokeStyle = "#fff"; 
+		//c.strokeStyle = "#fff"; 
+		c.strokeStyle = color; 
 		c.lineWidth = 2; 
 		
 		c.beginPath();

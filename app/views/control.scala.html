@@ -61,6 +61,11 @@
             var x = 0
             var y = 0
 
+            var websocketCapable = true
+            if (!window.WebSocket) {
+                websocketCapable = false
+            }
+
             setupCanvas();
 
             var mouseX, mouseY, 
@@ -86,8 +91,8 @@
 
             function resetCanvas (e) {  
                 // resize the canvas - but remember - this clears the canvas too. 
-                canvas.width = window.innerWidth + 40; 
-                canvas.height = window.innerHeight + 40;
+                canvas.width = window.innerWidth + 100; 
+                canvas.height = window.innerHeight + 100;
                 
                 halfWidth = canvas.width/2; 
                 halfHeight = canvas.height/2;
@@ -100,8 +105,9 @@
               
                 c.clearRect(0,0,canvas.width, canvas.height); 
 
-                socket.send( JSON.stringify( { action: "moving", name: "@username", controlx: x, controly: y } ) )
-                
+                //socket.send( JSON.stringify( { action: "moving", name: "@username", controlx: x, controly: y } ) )
+                move(x, y)
+
                 if(touchable) {
                 
                     for(var i=0; i<touches.length; i++) {
@@ -159,7 +165,8 @@
                         leftVector.reset(0,0); 
                         continue;       
                     } else {
-                        socket.send( JSON.stringify( { action: "fire", name: "@username", padx: touch.clientX, pady: touch.clientY } ) )
+                        //socket.send( JSON.stringify( { action: "fire", name: "@username", padx: touch.clientX, pady: touch.clientY } ) )
+                        fire(touch.clientX, touch.clientY)
                     }   
                 }
                 touches = e.touches; 
@@ -213,6 +220,25 @@
                 
                 c.strokeStyle = "#ffffff";
                 c.lineWidth =2; 
+            }
+
+            function move(vx, vy) {
+                var message = JSON.stringify( { action: "moving", name: "@username", controlx: vx, controly: vy } )
+                if (websocketCapable) {
+                    socket.send( message )
+                } else {
+                    $.post("@routes.Application.padAction(username)", { message: message })
+                }
+            }
+
+            function fire(vx, vy) {
+                var message = JSON.stringify( { action: "fire", name: "@username", padx: vx, pady: vy } )
+                if (websocketCapable) {
+                    socket.send( message )
+                } else {
+                    $.post("@routes.Application.padAction(username)", { message: message })
+                    routes
+                }
             }
         </script>
     </body>
