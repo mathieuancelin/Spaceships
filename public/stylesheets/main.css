@@ -6,3 +6,12 @@
     width: 1000px;
     height: 500px;
 }
+
+body {
+    background-color: #000;
+    background-image: -webkit-radial-gradient(600px 300px, circle, #778, #011 60%);
+    background-image: -moz-radial-gradient(600px 300px, circle, #444, #000 60%);
+    background-image: -o-radial-gradient(600px 300px, circle, #444, #000 60%);
+    background-image: radial-gradient(600px 300px, circle, #444, #000 60%);
+    color: #fff;
+}

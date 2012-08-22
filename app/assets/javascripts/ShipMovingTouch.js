@@ -6,13 +6,13 @@ ShipMoving = function(x,y) {
 	var vel = this.vel = new Vector2(0,0);
 	var targetVel = this.targetVel = new Vector2(0,0);  
 	var temp = new Vector2(0,0); 
-	var name = this.name = "Anonymous"
+	var name = this.name = "Anonymous";
 
-	var color = "rgb(255,255,255)"
-	
+	var color = "rgb(255,255,255)";
+
 	var thrustSize = 0; 
 
-	var drawing = true
+	var drawing = true;
 	
 	var canvas = this.canvas = document.createElement("canvas"); 
 	
@@ -27,11 +27,11 @@ ShipMoving = function(x,y) {
 	var counter = 0; 
 
 	this.updateName = function(n) {
-		this.name = n
+		this.name = n;
 	}
 
 	this.updateColor = function(n) {
-		color = n
+		color = n;
 	}
 
 	this.update = function() {
@@ -64,37 +64,55 @@ ShipMoving = function(x,y) {
 	// c = canvas context
 	this.draw = function() {	
 		c.clearRect(0,0,60,60); 
-		if (drawing) {	
+		if (drawing) {
+
 			//c.fillStyle = "rgba(255,255,255,0.5)";
-			c.lineCap = 'square'
+			c.lineCap = 'square';
 	        c.font = "12pt Calibri";
 			c.fillStyle = color;
-			//c.fillRect(0,0,60,60); 
+			//c.fillRect(0,0,60,60);
 			c.save();
-			c.translate(30, 30); 
+			c.translate(30, 30);
 			//this.c.rotate(this.angle * Vector2Const.TO_RADIANS);
 
-			//c.strokeStyle = "#fff"; 
-			c.strokeStyle = color; 
-			c.lineWidth = 2; 
-			
+			//c.strokeStyle = "#fff";
+			c.strokeStyle = color;
+			c.lineWidth = 2;
+
+            // spaceship
 			c.beginPath();
-			c.fillText(this.name, -30, -15) 
+            c.fillText(this.name, -30, -15);
 			c.moveTo(-10, -10);
 			c.lineTo(-10, 10);
-			c.lineTo(14, 0);
-			c.closePath(); 
-			c.stroke();
-		
-			if(thrustSize>0) {
+            c.lineTo(0, 4);
+            c.lineTo(19, 0);
+            c.lineTo(0, -4);
 
+            // space gradient
+            var grd = c.createLinearGradient(-10, 0, 19, 0);
+            grd.addColorStop(0.67, "#d6d6d6");
+            grd.addColorStop(0.37, "#626a94");
+            grd.addColorStop(0.10, "#141414");
+            c.fillStyle = grd;
+            c.fill();
+
+			c.closePath();
+			c.stroke();
+
+			if(thrustSize>0) {
 				c.beginPath();
-				c.moveTo(-10, -6);
-				
-				c.lineTo(-10 - (thrustSize/((counter%2)+1)) , 0);
-				
+              	c.moveTo(-10, -6);
+                c.lineTo(-10 - (thrustSize/((counter%2)+1)) , 0);
 				c.lineTo(-10, 6);
-				//c.closePath(); 
+
+                // flame
+                var grd2 = c.createRadialGradient(-10,-6,10,-10,6 ,0);
+                grd2.addColorStop(0, "#efdf2f");
+                grd2.addColorStop(0.67, "#d13a3a");
+                c.fillStyle = grd2;
+                c.fill();
+
+				//c.closePath();
 				c.stroke();
 				counter++; 
 			}
@@ -107,7 +125,6 @@ ShipMoving = function(x,y) {
 			var styleStr = "translate3d("+posx+"px, "+posy+"px, 0px) rotate("+this.angle+"deg)"; 
 			canvas.style.webkitTransform = canvas.style.MozTransform = canvas.style.OTransform = canvas.style.transform = styleStr; 
 			//console.log(styleStr); 
-			
 		}
 	};
 
@@ -118,9 +135,9 @@ ShipMoving = function(x,y) {
 		var upy = (this.pos.y + 10)
 		if (vx > downx && vx < upx && vy > downy  && vy < upy ) {
 			console.log("[" + name + "]I'm dying !!!")
-			drawing = false
-			pos.x = -30
-			pos.y = -30
+			drawing = false;
+			pos.x = -30;
+			pos.y = -30;
 			return true
 		}
 		return false

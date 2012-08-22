@@ -14,13 +14,15 @@ Bullet = function(x, y, angle) {
 	
 	this.draw = function(c) {
 	
-		if(!this.enabled) return; 
-	
-		c.lineWidth =2; 
-		c.strokeStyle = "#fff"; 
-		c.beginPath(); 
-		c.arc(this.pos.x,this.pos.y,2, 0, Math.PI*2, true); 
-		c.stroke();
+		if(!this.enabled) return;
+
+		c.lineWidth =2;
+		c.strokeStyle = "#0f0";
+        c.fillStyle = 'rgba(255, 110, 110, 0.5)';
+		c.beginPath();
+		c.arc(this.pos.x,this.pos.y,2, 0, Math.PI*2, true);
+        c.closePath();
+        c.stroke();
 	
 	};
 	
