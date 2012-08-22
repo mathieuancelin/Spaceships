@@ -1,4 +1,20 @@
-This is your new Play 2.0 application
+=====================================
+  SpacePlay!
+=====================================
+Require:  Play 2.0.3
 =====================================
 
-This file will be packaged with your application, when using `play dist`.
+Author: Mathieu Ancelin - SERLI
+
+- From your laptop, start the play application, and open a web browser to http://localhost:9000/
+- From your IPad/IPhone/Android phone, open a web browser and connect to your laptop, e.g http://192.168.0.1:9000/mobile
+- Enter your name then press Play
+- Play from your iphone, each event gets sent to the server. Use the iphone as a command. Left tumb to move, right thumb to fire.
+
+This application uses Akka, Server Sent Event and is a pure demo of Reacting programming with Play! Framework.
+
+http://www.playframework.org/
+
+=====================================
+
+
