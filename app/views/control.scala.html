@@ -64,6 +64,7 @@
             var x = 0
             var y = 0
             var status = "alive"
+            var waiting = true
 
             var websocketCapable = true
             if (!window.WebSocket) {
@@ -75,6 +76,15 @@
                     var sent = JSON.parse( event.data )
                     if (sent.action == "kill") {
                         status = "dead"
+                    }
+                    if (sent.action == "wait") {
+                        waiting = true
+                    }
+                    if (sent.action == "play") {
+                        waiting = false
+                    }
+                    if (sent.action == "win") {
+                        status = "win"
                     }
                 }
             }
@@ -122,14 +132,19 @@
                 c.fillStyle = "#fff"; 
                 c.beginPath();
                 if (websocketCapable) {
-                    c.fillText("WebSocket => " + shots + " / " + maxShot + " bullets shot", 3, 13) 
+                    c.fillText("WebSocket " + waiting + " => " + shots + " / " + maxShot + " bullets shot", 3, 13) 
                 } else {
-                    c.fillText("AJAX => " + shots + " / " + maxShot + " bullets shot", 3, 13) 
+                    c.fillText("AJAX " + waiting + " => " + shots + " / " + maxShot + " bullets shot", 3, 13) 
                 }
                 if (status == "dead") {
                     c.font = "25pt Calibri";
                     c.fillStyle = "#ff0000";
                     c.fillText("YOU'RE DEAD", 30, halfHeight) 
+                }
+                if (status == "win") {
+                    c.font = "25pt Calibri";
+                    c.fillStyle = "#ff0000";
+                    c.fillText("YOU WIN", 30, halfHeight) 
                 }
                 c.closePath(); 
                 c.stroke();
@@ -263,12 +278,12 @@
             }
 
             function action(act, vx, vy) {
-                if (status != "dead") {
+                if (status != "dead" && !waiting) {
                     var message = JSON.stringify( { action: act, name: "@username", x: vx, y: vy } )
                     if (websocketCapable) {
                         socket.send( message )
                     } else {
-                        $.post("@routes.Application.padAction(username)", { message: message })
+                        $.post("@routes.Application.padAction(username)", { message: message } )
                     }
                 }
             }

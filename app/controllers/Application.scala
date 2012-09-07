@@ -24,6 +24,8 @@ object Application extends Controller {
     val XMAX = 1000
     val YMAX = 500
 
+    val playerMax = 2
+
     val usernameForm = Form( "username" -> text )  
     val actionForm = Form( "message" -> text )  
 
@@ -35,7 +37,9 @@ object Application extends Controller {
 
     val toEventSource = Enumeratee.map[JsValue] { msg => "data: " + msg + "\n\n" }
 
-    var playersEnumerators = new ConcurrentHashMap[String, PushEnumerator[JsValue]]
+    var activePlayers = new ConcurrentHashMap[String, Player]
+
+    var waitingPlayers = new ConcurrentHashMap[String, Player]
 
     def playerUsername( username: String ) = {
         "playerWithUsername-" + username
@@ -108,19 +112,49 @@ object Application extends Controller {
     }
 
     def createUserIfAbsent( username: String ) = {
-        if ( !playersEnumerators.containsKey( username ) ) {
-            playersEnumerators.put( username, Enumerator.imperative[JsValue]( ) )
-        } 
-        playersEnumerators.get( username )
+        if ( activePlayers.size < playerMax) { 
+            if ( !activePlayers.containsKey( username ) ) {
+                activePlayers.put( username, Player( username, Enumerator.imperative[JsValue]( ) ) )
+            } 
+            val p = activePlayers.get( username ).enumerator
+            Akka.system.scheduler.scheduleOnce(200 milliseconds) {
+                p.push( JsObject( JList( "action" -> JsString( "play" ) ) ) )
+            }
+            p
+        } else {
+            if ( !waitingPlayers.containsKey( username ) ) {
+                waitingPlayers.put( username, Player( username, Enumerator.imperative[JsValue]( ) ) )
+            } 
+            val p = waitingPlayers.get( username ).enumerator
+            Akka.system.scheduler.scheduleOnce(200 milliseconds) {
+                p.push( JsObject( JList( "action" -> JsString( "wait" ) ) ) )
+            }
+            p
+        }
     }
 
     def kill( username: String ) = Action { implicit request =>
-        val out = Option( playersEnumerators.get( username ) )
+        val out = Option( activePlayers.get( username ) )
         out.map { player =>
-            println( "sending kill to " + username)
-            player.push( JsObject( JList( "action" -> JsString( "kill" ) ) ) )
-            playersEnumerators.remove( username )
+            //println( "sending kill to " + username)
+            player.enumerator.push( JsObject( JList( "action" -> JsString( "kill" ) ) ) )
+            activePlayers.remove( username )
+            if (!waitingPlayers.isEmpty()) {
+                val p = waitingPlayers.entrySet().iterator().next()
+                waitingPlayers.remove( p.getKey() )
+                activePlayers.put( p.getValue().username, p.getValue() )
+                p.getValue().enumerator.push( JsObject( JList( "action" -> JsString( "play" ) ) ) )
+            }
         }
-        Ok
+        if (activePlayers.size == 1 && waitingPlayers.isEmpty()) {
+            // stop game and call winner
+            val p = activePlayers.entrySet().iterator().next().getValue()
+            p.enumerator.push( JsObject( JList( "action" -> JsString( "win" ) ) ) )
+            Ok("winner:" + p.username)
+        } else {
+            Ok("continue")
+        }
     }
 }
+
+case class Player( username: String, enumerator: PushEnumerator[JsValue])

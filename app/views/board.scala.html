@@ -118,7 +118,11 @@
                 players.each(function(index, elem) {
                     var dead = elem.around(bullet.pos.x, bullet.pos.y)
                     if (dead) {
-                        $.post("/mobile/" + elem.name + "/pad/kill")
+                        $.post("/mobile/" + elem.name + "/pad/kill", function(data) {
+                            if (data.substring(0, 3) == "win") {
+                                console.log("winner is " + data)
+                            }
+                        })
                     }
                 })           
             }
