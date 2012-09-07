@@ -33,7 +33,13 @@ object Application extends Controller {
     val bulletsHub = Concurrent.hub[JsValue]( bulletsEnumerator )
     val players = new ConcurrentHashMap[String, ActorRef]
 
-    var playersENumerators = new ConcurrentHashMap[String, PushEnumerator[JsValue]]
+    val toEventSource = Enumeratee.map[JsValue] { msg => "data: " + msg + "\n\n" }
+
+    var playersEnumerators = new ConcurrentHashMap[String, PushEnumerator[JsValue]]
+
+    def playerUsername( username: String ) = {
+        "playerWithUsername-" + username
+    }
 
     def index() = Action { implicit request =>
         Ok( views.html.board() )    
@@ -43,10 +49,6 @@ object Application extends Controller {
         Ok( views.html.mobilestart() )
     }
 
-    /**def mobilePad(username: String) = Action { implicit request =>
-        Ok( views.html.mobilepad(username) )
-    }**/
-
     def mobilePad(username: String) = Action { implicit request =>
         Ok( views.html.control( username ) )
     }
@@ -55,9 +57,9 @@ object Application extends Controller {
         usernameForm.bindFromRequest.fold (
             formWithErrors => BadRequest( "You need to post a 'username' value!" ),
             { username =>
-                val key = "playerWithUsername" + username
-                val actor = Akka.system.actorOf(Props(new ActorPlayer(username)), name = "playerWithUsername" + username)
+                val key = playerUsername( username )
                 if ( !players.containsKey( key ) ) {
+                    val actor = Akka.system.actorOf(Props(new ActorPlayer(username)), name = key)
                     players.putIfAbsent( key, actor)
                 }
                 Redirect("/mobile/" + username + "/pad")
@@ -66,19 +68,11 @@ object Application extends Controller {
     }
 
     def playersSSE() = Action { implicit request =>
-        SimpleResult(
-            header = ResponseHeader(
-                OK, Map( CONTENT_LENGTH -> "-1", CONTENT_TYPE -> "text/event-stream" )
-            ), playersHub.getPatchCord().through( Enumeratee.map[JsValue] { msg => "data: " + msg + "\n\n" } )
-        )
+        Ok.feed( playersHub.getPatchCord().through( toEventSource ) ).as( "text/event-stream" )
     }
 
     def bulletSSE() = Action { implicit request =>
-        SimpleResult(
-            header = ResponseHeader(
-                OK, Map( CONTENT_LENGTH -> "-1", CONTENT_TYPE -> "text/event-stream" )
-            ), bulletsHub.getPatchCord().through( Enumeratee.map[JsValue] { msg => "data: " + msg + "\n\n" } )
-        )
+        Ok.feed( bulletsHub.getPatchCord().through( toEventSource ) ).as( "text/event-stream" )
     }
 
     def mobilePadStream( username: String ) = WebSocket.async[JsValue] { request =>
@@ -87,7 +81,7 @@ object Application extends Controller {
             case message: JsObject => {
                 //println( message )
                 playersEnumerator.push( message )
-                /**val key = "playerWithUsername" + username
+                /**val key = playerUsername( username )
                 if ( players.containsKey( key ) ) {
                     val actor = players.get( key )
                     ( message \ "command" ).as[String] match {
@@ -97,6 +91,7 @@ object Application extends Controller {
                     }
                 }**/
             }
+            case _ =>
         })
         Promise.pure( ( in, out ) )
     }
@@ -113,17 +108,19 @@ object Application extends Controller {
     }
 
     def createUserIfAbsent( username: String ) = {
-        if ( !playersENumerators.containsKey( username ) ) {
-            playersENumerators.put( username, Enumerator.imperative[JsValue]( ) )
-        } else {
-            playersENumerators.get( username )
-        }
+        if ( !playersEnumerators.containsKey( username ) ) {
+            playersEnumerators.put( username, Enumerator.imperative[JsValue]( ) )
+        } 
+        playersEnumerators.get( username )
     }
 
     def kill( username: String ) = Action { implicit request =>
-        println( "killing " + username)
-        val out = playersENumerators.get( username )
-        out.push( JsObject( JList( "action" -> JsString( "kill" ) ) ) )
+        val out = Option( playersEnumerators.get( username ) )
+        out.map { player =>
+            println( "sending kill to " + username)
+            player.push( JsObject( JList( "action" -> JsString( "kill" ) ) ) )
+            playersEnumerators.remove( username )
+        }
         Ok
     }
 }

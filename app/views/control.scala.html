@@ -55,6 +55,9 @@
             leftTouchStartPos = new Vector2(0,0),
             leftVector = new Vector2(0,0); 
 
+            var shots = 0;
+            var maxShot = 80;
+
             //var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket    
             var socket// = new WS( "ws://" + location.host + "/mobile/@username/stream " )
 
@@ -70,9 +73,7 @@
                 socket = new WS( "ws://" + location.host + "/mobile/@username/stream " )
                 socket.onmessage = function( event ) {
                     var sent = JSON.parse( event.data )
-                    console.log( sent )
                     if (sent.action == "kill") {
-                        console.log("pouet")
                         status = "dead"
                     }
                 }
@@ -121,9 +122,9 @@
                 c.fillStyle = "#fff"; 
                 c.beginPath();
                 if (websocketCapable) {
-                    c.fillText("WebSocket", 3, 13) 
+                    c.fillText("WebSocket => " + shots + " / " + maxShot + " bullets shot", 3, 13) 
                 } else {
-                    c.fillText("AJAX", 3, 13) 
+                    c.fillText("AJAX => " + shots + " / " + maxShot + " bullets shot", 3, 13) 
                 }
                 if (status == "dead") {
                     c.font = "25pt Calibri";
@@ -136,7 +137,7 @@
                 //socket.send( JSON.stringify( { action: "moving", name: "@username", controlx: x, controly: y } ) )
                 move(x, y)
 
-                if(touchable) {
+                if(touchable && (status != "dead")) {
                 
                     for(var i=0; i<touches.length; i++) {
                         
@@ -255,15 +256,20 @@
             }
 
             function fire(vx, vy) {
-                action("fire", vx, vy)
+                if (shots < maxShot) {
+                    action("fire", vx, vy);
+                    shots = shots + 1;
+                }
             }
 
             function action(act, vx, vy) {
-                var message = JSON.stringify( { action: act, name: "@username", x: vx, y: vy } )
-                if (websocketCapable) {
-                    socket.send( message )
-                } else {
-                    $.post("@routes.Application.padAction(username)", { message: message })
+                if (status != "dead") {
+                    var message = JSON.stringify( { action: act, name: "@username", x: vx, y: vy } )
+                    if (websocketCapable) {
+                        socket.send( message )
+                    } else {
+                        $.post("@routes.Application.padAction(username)", { message: message })
+                    }
                 }
             }
         </script>
