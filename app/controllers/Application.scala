@@ -28,8 +28,10 @@ object Application extends Controller {
     val bulletsEnumerator = Enumerator.imperative[JsValue]( )
     val playersHub = Concurrent.hub[JsValue]( playersEnumerator )
     val bulletsHub = Concurrent.hub[JsValue]( bulletsEnumerator )
+    var sinkEnumerator = Enumerator.imperative[JsValue]( )
+    var sinkIteratee = Iteratee.foreach[JsValue] ( _ match { case _ => } )
 
-    var currentGame = new Game()
+    var currentGame = Option( new Game() )
 
     def index() = Action { implicit request =>
         Ok( views.html.board() )    
@@ -63,31 +65,47 @@ object Application extends Controller {
 
     // for websocket capable devices
     def mobilePadStream( username: String ) = WebSocket.async[JsValue] { request =>
-        var out = currentGame.createUser( username )
-        var in = Iteratee.foreach[JsValue] ( _ match {
-            case message: JsObject => {
-                // TODO : use game engine instead of relying on client side
-                playersEnumerator.push( message )
-            }
-            case _ => // do nothing
-        })
-        Promise.pure( ( in, out ) )
+        currentGame.map { game =>
+            var out = game.createUser( username )
+            var in = Iteratee.foreach[JsValue] ( _ match {
+                case message: JsObject => {
+                    processInputFromPlayer( username, message )
+                }
+                case _ => // do nothing
+            })
+            Promise.pure( ( in, out ) )
+        }.getOrElse( 
+            Promise.pure( ( sinkIteratee, sinkEnumerator ) ) 
+        )
     }
 
     // for non websocket capable devices
     def padAction( username: String ) = Action { implicit request =>
-        currentGame.createUser( username )
-        actionForm.bindFromRequest.fold (
-            formWithErrors => BadRequest,
-            { action =>
-                playersEnumerator.push( Json.parse( action ) )
-                Ok
-            } 
+        currentGame.map { game =>
+            game.createUser( username )
+            actionForm.bindFromRequest.fold (
+                formWithErrors => BadRequest( "You have to provide an 'action' value." ),
+                { action =>
+                    processInputFromPlayer( username, Json.parse( action ) )
+                    Ok
+                } 
+            )
+        }.getOrElse( 
+            InternalServerError( "There is currently no game running" ) 
         )
     }
 
-    // TODO : remove when game engine will be implemented
+    def processInputFromPlayer( username: String, message: JsValue) = {
+        // TODO : use game engine instead of relying on client side computing
+        playersEnumerator.push( message )
+    }
+
+    // TODO : get rid of it when game engine will be fully implemented
     def kill( username: String ) = Action { implicit request =>
-        Ok( currentGame.kill( username ) )
+        currentGame.map { game =>
+            Ok( game.kill( username ) )
+        }.getOrElse( 
+            InternalServerError( "There is currently no game running" ) 
+        )
     }
 }
