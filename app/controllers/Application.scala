@@ -14,17 +14,12 @@ import scala.concurrent.stm._
 import akka.util.duration._
 import play.api.cache._
 import play.api.libs.json._
-import utils._
+import core._
 import akka.actor._
 import java.util.concurrent.ConcurrentHashMap
 import scala.collection.immutable.{ List => JList }
 
 object Application extends Controller {
-
-    val XMAX = 1000
-    val YMAX = 500
-
-    val playerMax = 2
 
     val usernameForm = Form( "username" -> text )  
     val actionForm = Form( "message" -> text )  
@@ -33,17 +28,8 @@ object Application extends Controller {
     val bulletsEnumerator = Enumerator.imperative[JsValue]( )
     val playersHub = Concurrent.hub[JsValue]( playersEnumerator )
     val bulletsHub = Concurrent.hub[JsValue]( bulletsEnumerator )
-    val players = new ConcurrentHashMap[String, ActorRef]
 
-    val toEventSource = Enumeratee.map[JsValue] { msg => "data: " + msg + "\n\n" }
-
-    var activePlayers = new ConcurrentHashMap[String, Player]
-
-    var waitingPlayers = new ConcurrentHashMap[String, Player]
-
-    def playerUsername( username: String ) = {
-        "playerWithUsername-" + username
-    }
+    var currentGame = new Game()
 
     def index() = Action { implicit request =>
         Ok( views.html.board() )    
@@ -61,47 +47,36 @@ object Application extends Controller {
         usernameForm.bindFromRequest.fold (
             formWithErrors => BadRequest( "You need to post a 'username' value!" ),
             { username =>
-                val key = playerUsername( username )
-                if ( !players.containsKey( key ) ) {
-                    val actor = Akka.system.actorOf(Props(new ActorPlayer(username)), name = key)
-                    players.putIfAbsent( key, actor)
-                }
                 Redirect("/mobile/" + username + "/pad")
             } 
         )
     }
 
     def playersSSE() = Action { implicit request =>
-        Ok.feed( playersHub.getPatchCord().through( toEventSource ) ).as( "text/event-stream" )
+        Ok.feed( playersHub.getPatchCord().through( EventSource() ) ).as( "text/event-stream" )
     }
 
+    // not used yet
     def bulletSSE() = Action { implicit request =>
-        Ok.feed( bulletsHub.getPatchCord().through( toEventSource ) ).as( "text/event-stream" )
+        Ok.feed( bulletsHub.getPatchCord().through( EventSource() ) ).as( "text/event-stream" )
     }
 
+    // for websocket capable devices
     def mobilePadStream( username: String ) = WebSocket.async[JsValue] { request =>
-        var out = createUserIfAbsent( username )
+        var out = currentGame.createUser( username )
         var in = Iteratee.foreach[JsValue] ( _ match {
             case message: JsObject => {
-                //println( message )
+                // TODO : use game engine instead of relying on client side
                 playersEnumerator.push( message )
-                /**val key = playerUsername( username )
-                if ( players.containsKey( key ) ) {
-                    val actor = players.get( key )
-                    ( message \ "command" ).as[String] match {
-                        case "MOVE" => actor ! Move( ( message \ "dir" ).as[String] )
-                        case "SHOOT" => JUGActors.shooter ! Shoot( ( message \ "x" ).as[Int], 
-                            ( message \ "y" ).as[Int], ( message \ "dir" ).as[String] )
-                    }
-                }**/
             }
-            case _ =>
+            case _ => // do nothing
         })
         Promise.pure( ( in, out ) )
     }
 
+    // for non websocket capable devices
     def padAction( username: String ) = Action { implicit request =>
-        createUserIfAbsent( username )
+        currentGame.createUser( username )
         actionForm.bindFromRequest.fold (
             formWithErrors => BadRequest,
             { action =>
@@ -111,50 +86,8 @@ object Application extends Controller {
         )
     }
 
-    def createUserIfAbsent( username: String ) = {
-        if ( activePlayers.size < playerMax) { 
-            if ( !activePlayers.containsKey( username ) ) {
-                activePlayers.put( username, Player( username, Enumerator.imperative[JsValue]( ) ) )
-            } 
-            val p = activePlayers.get( username ).enumerator
-            Akka.system.scheduler.scheduleOnce(200 milliseconds) {
-                p.push( JsObject( JList( "action" -> JsString( "play" ) ) ) )
-            }
-            p
-        } else {
-            if ( !waitingPlayers.containsKey( username ) ) {
-                waitingPlayers.put( username, Player( username, Enumerator.imperative[JsValue]( ) ) )
-            } 
-            val p = waitingPlayers.get( username ).enumerator
-            Akka.system.scheduler.scheduleOnce(200 milliseconds) {
-                p.push( JsObject( JList( "action" -> JsString( "wait" ) ) ) )
-            }
-            p
-        }
-    }
-
+    // TODO : remove when game engine will be implemented
     def kill( username: String ) = Action { implicit request =>
-        val out = Option( activePlayers.get( username ) )
-        out.map { player =>
-            //println( "sending kill to " + username)
-            player.enumerator.push( JsObject( JList( "action" -> JsString( "kill" ) ) ) )
-            activePlayers.remove( username )
-            if (!waitingPlayers.isEmpty()) {
-                val p = waitingPlayers.entrySet().iterator().next()
-                waitingPlayers.remove( p.getKey() )
-                activePlayers.put( p.getValue().username, p.getValue() )
-                p.getValue().enumerator.push( JsObject( JList( "action" -> JsString( "play" ) ) ) )
-            }
-        }
-        if (activePlayers.size == 1 && waitingPlayers.isEmpty()) {
-            // stop game and call winner
-            val p = activePlayers.entrySet().iterator().next().getValue()
-            p.enumerator.push( JsObject( JList( "action" -> JsString( "win" ) ) ) )
-            Ok("winner:" + p.username)
-        } else {
-            Ok("continue")
-        }
+        Ok( currentGame.kill( username ) )
     }
 }
-
-case class Player( username: String, enumerator: PushEnumerator[JsValue])

@@ -1,4 +1,4 @@
-package utils
+package core
 
 import play.api._
 import models._
@@ -33,7 +33,7 @@ class ActorPlayer(name: String, var posX: Int = 0, var posY: Int = 0) extends Ac
             push("alive")
         }
         case Move("RIGHT") => {
-            if (posX < Application.XMAX) posX = posX + INC
+            if (posX < JUGActors.XMAX) posX = posX + INC
             push("alive")
         }
         case Move("UP")    => {
@@ -41,7 +41,7 @@ class ActorPlayer(name: String, var posX: Int = 0, var posY: Int = 0) extends Ac
             push("alive")
         }
         case Move("DOWN")  => {
-            if (posY < Application.YMAX) posY = posY + INC 
+            if (posY < JUGActors.YMAX) posY = posY + INC 
             push("alive")
         }       
         case Killed(x, y)  => {
@@ -97,21 +97,24 @@ class Shot(var x: Int, var y: Int, var dir: String) {
             case "UP"    => y = y - INC
             case "DOWN"  => y = y + INC
         }
-        for (ref <- Application.players.values) {
-            ref ! Killed(x, y)
-        }
+        //for (ref <- players.values) {
+        //    ref ! Killed(x, y)
+        //}
     }
     def done() = {
         (x, y) match {
             case (xx, _) if xx < 0 => true
-            case (xx, _) if xx > Application.XMAX => true
+            case (xx, _) if xx > JUGActors.XMAX => true
             case (_, yy) if yy < 0 => true
-            case (_, yy) if yy > Application.YMAX => true
+            case (_, yy) if yy > JUGActors.YMAX => true
         }
     }
 }
 
 object JUGActors {
+
+    val XMAX = 600
+    val YMAX = 600
 
     val shots = new ArrayList[Shot]
 
