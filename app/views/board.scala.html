@@ -67,6 +67,7 @@
             spareBullets = [];
 
         var players = new HashMap()
+        var playerBullets = new HashMap()
 
         setInterval(draw, 1000/35); 
 
@@ -105,7 +106,7 @@
                 }**/
             })         
             
-            for (var i = 0; i < bullets.length; i++) {
+            /**for (var i = 0; i < bullets.length; i++) {
                 var bullet = bullets[i]; 
                 if(!bullet.enabled) continue; 
                 bullet.update(); 
@@ -113,7 +114,7 @@
                 if(!bullet.enabled){
                     spareBullets.push(bullet); 
                 }     
-                /**players.each(function(index, elem) {
+                players.each(function(index, elem) {
                     var dead = elem.around(bullet.pos.x, bullet.pos.y)
                     if (dead) {
                         $.post("/mobile/" + elem.name + "/pad/kill", function(data) {
@@ -122,8 +123,12 @@
                             }
                         })
                     }
-                })    **/       
-            }
+                })         
+            }**/
+
+            playerBullets.each(function(index, bullet) {
+                bullet.draw(c)
+            })   
             
             if(touchable) {
             
@@ -158,7 +163,7 @@
             } 
         }
 
-        function makeBullet(x, y, angle, velx, vely) {
+        /**function makeBullet(x, y, angle, velx, vely) {
             var bullet;
             if(spareBullets.length>0) {
                 bullet = spareBullets.pop(); 
@@ -168,7 +173,7 @@
                 bullets.push(bullet);
             }
             bullet.vel.plusEq( new Vector2(velx, vely)); 
-        }
+        }**/
 
         function setupCanvas() {
             
@@ -209,8 +214,20 @@
                         ship.pos.y = data.y;
                     }
                 }
-                if (data.action == "fire") {
+                /**if (data.action == "fire") {
                     makeBullet(data.x, data.y, data.angle, data.velx, data.vely)
+                }**/
+                if (data.action == "shoot") {
+                    if (data.disabled == "true") {
+                        playerBullets.remove(data.id)
+                    } else {
+                        if (!playerBullets.containsKey(data.id)) {
+                            var bullet = new Bullet(data.x, data.y, 0); 
+                            playerBullets.put(data.id, bullet) 
+                        } 
+                        var bullet = playerBullets.get(data.id);
+                        bullet.reset(data.x, data.y, 0)
+                    }
                 }
                 if (data.action == "kill") {
                     console.log("killing " + data.name)

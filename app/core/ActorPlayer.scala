@@ -51,7 +51,7 @@ class ActorPlayer( name: String, var posX: Double = 300.0, var posY: Double = 30
         case Shoot( x, y) => {
             val bullet = Bullet(name, spaceShip.pos.x, spaceShip.pos.y, spaceShip.angle)
             bullet.vel.plusEq( spaceShip.vel ) 
-            push( "alive", "fire", spaceShip )
+            //push( "alive", "fire", spaceShip )
             currentGame.map { game =>
                 game.shooter ! bullet
             }
@@ -92,15 +92,30 @@ class ShootActor( currentGame: Option[Game] ) extends Actor with ActorLogging {
             currentGame.map { game =>
                 bullets = bullets.filter { bullet =>
                     bullet.update()
-                    for ( player <- game.activePlayers.values() ) {
-                        if (!player.username.equals( bullet.from )) {
-                            if (player.spaceShip.around( bullet.pos.x, bullet.pos.y )) {
-                                println( "[" + player.username + "] I'm dead bro !")
-                                game.kill( player.username )
-                                player.actor ! Kill( bullet.pos.x, bullet.pos.y )
+                    if (bullet.enabled) {
+                        Application.playersEnumerator.push( JsObject(JList(
+                            "action" -> JsString( "shoot" ),
+                            "id" -> JsString( bullet.id ),
+                            "x" -> JsNumber( bullet.pos.x ),
+                            "y" -> JsNumber( bullet.pos.y ),
+                            "disabled" -> JsString( "false" )
+                        )))
+                        for ( player <- game.activePlayers.values() ) {
+                            if (!player.username.equals( bullet.from )) {
+                                if (player.spaceShip.around( bullet.pos.x, bullet.pos.y )) {
+                                    println( "[" + player.username + "] I'm dead bro !")
+                                    game.kill( player.username )
+                                    player.actor ! Kill( bullet.pos.x, bullet.pos.y )
+                                }
                             }
+                            //player.actor ! Kill( bullet.pos.x, bullet.pos.y )
                         }
-                        //player.actor ! Kill( bullet.pos.x, bullet.pos.y )
+                    } else {
+                        Application.playersEnumerator.push( JsObject(JList(
+                            "action" -> JsString( "shoot" ),
+                            "id" -> JsString( bullet.id ),
+                            "disabled" -> JsString( "true" )
+                        )))
                     }
                     bullet.enabled
                 }

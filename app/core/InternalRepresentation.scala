@@ -2,7 +2,7 @@ package core
 
 import scala.math._
 
-class Bullet( var from: String, var x: Double, var y: Double, var angle: Double) {
+class Bullet( var id: String, var from: String, var x: Double, var y: Double, var angle: Double) {
 	
 	var speed = 10.0
 	var pos = new Vector( x, y )
@@ -35,7 +35,7 @@ class Bullet( var from: String, var x: Double, var y: Double, var angle: Double)
 object Bullet {
 
 	def apply( from: String, x: Double, y: Double, angle: Double ): Bullet = {
-		val bullet = new Bullet( from, x, y, angle )
+		val bullet = new Bullet( System.nanoTime() + "", from, x, y, angle )
 		bullet.reset( x, y, angle )
 		bullet
 	}
