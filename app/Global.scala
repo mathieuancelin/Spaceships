@@ -5,6 +5,12 @@ import core._
 object Global extends GlobalSettings {
 
     override def onStart( app: Application ) {
-        //JUGActors.start() 
+
+    }
+
+    override def onStop( app: Application ) {
+    	controllers.Application.currentGame.map { game =>
+    		game.stop()
+    	}
     }
 }

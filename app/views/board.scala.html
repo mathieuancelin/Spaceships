@@ -113,7 +113,7 @@
                 if(!bullet.enabled){
                     spareBullets.push(bullet); 
                 }     
-                players.each(function(index, elem) {
+                /**players.each(function(index, elem) {
                     var dead = elem.around(bullet.pos.x, bullet.pos.y)
                     if (dead) {
                         $.post("/mobile/" + elem.name + "/pad/kill", function(data) {
@@ -122,7 +122,7 @@
                             }
                         })
                     }
-                })           
+                })    **/       
             }
             
             if(touchable) {
@@ -158,16 +158,16 @@
             } 
         }
 
-        function makeBullet(ship) {
+        function makeBullet(x, y, angle, velx, vely) {
             var bullet;
             if(spareBullets.length>0) {
                 bullet = spareBullets.pop(); 
-                bullet.reset(ship.pos.x, ship.pos.y, ship.angle); 
+                bullet.reset(x, y, angle); 
             } else {
-                bullet = new Bullet(ship.pos.x, ship.pos.y, ship.angle); 
+                bullet = new Bullet(x, y, angle); 
                 bullets.push(bullet);
             }
-            bullet.vel.plusEq(ship.vel); 
+            bullet.vel.plusEq( new Vector2(velx, vely)); 
         }
 
         function setupCanvas() {
@@ -192,6 +192,7 @@
                 var data = JSON.parse(event.data)
                 if (data.action == "moving") {
                     if (!players.containsKey(data.name)) {
+                        console.log("adding " + data.name)
                         var ship = new ShipMoving(halfWidth, halfHeight)
                         ship.updateName(data.name)
                         var r = (Math.floor(Math.random()*175) + 80).toString(16)
@@ -209,7 +210,12 @@
                     }
                 }
                 if (data.action == "fire") {
-                    makeBullet(players.get(data.name))
+                    makeBullet(data.x, data.y, data.angle, data.velx, data.vely)
+                }
+                if (data.action == "kill") {
+                    console.log("killing " + data.name)
+                    var ship = players.get(data.name)
+                    ship.around( ship.pos.x, ship.pos.y )
                 }
             }
         })

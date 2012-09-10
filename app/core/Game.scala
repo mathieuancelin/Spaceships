@@ -12,11 +12,12 @@ import akka.actor._
 import java.util._
 import java.util.concurrent.ConcurrentHashMap
 import scala.collection.immutable.{ List => JList }
+import controllers._
 
 
-case class Player( username: String, enumerator: PushEnumerator[JsValue], actor: ActorRef )
+case class Player( username: String, spaceShip: SpaceShip, enumerator: PushEnumerator[JsValue], actor: ActorRef )
 
-class Game {
+class Game( enumerator: PushEnumerator[JsValue] ) {
 
     val system = ActorSystem("CurrentGameSystem")
 
@@ -26,10 +27,16 @@ class Game {
 
     var waitingPlayersName = new ArrayList[String]
 
+    val shooter = system.actorOf(Props(new ShootActor(Option(this))), name = "currentshootactor")
+
     def start() = {
+        system.scheduler.schedule(0 millisecond, 20 milliseconds) {
+            shooter ! Tick()
+        }
     }
 
     def stop() = {
+        shooter ! PoisonPill
         system.shutdown()
     }
 
@@ -47,8 +54,10 @@ class Game {
     def createUserIfAbsent( username: String, action: String, map: ConcurrentHashMap[String, Player] ) = {
     	if ( !map.containsKey( username ) ) {
             val key = Game.playerUsername( username )
-            val actor = system.actorOf(Props(new ActorPlayer(username)), name = key)
-            map.put( username, Player( username, Enumerator.imperative[JsValue]( ), actor ) )
+            val ship = new SpaceShip( 300, 300 )
+            val actor = system.actorOf(Props(new ActorPlayer(username, 
+                spaceShip = ship, currentGame = Option( this ))), name = key)
+            map.put( username, Player( username, ship, Enumerator.imperative[JsValue]( ), actor ) )
         } 
         val pushEnum = map.get( username ).enumerator
         system.scheduler.scheduleOnce(200 milliseconds) {
@@ -61,6 +70,7 @@ class Game {
     	val out = Option( activePlayers.get( username ) )
         out.map { player =>
             player.enumerator.push( JsObject( JList( "action" -> JsString( "kill" ) ) ) )
+            enumerator.push( JsObject( JList( "action" -> JsString( "kill" ), "name" -> JsString( username ) ) ) )
             player.actor ! PoisonPill
             activePlayers.remove( username )
             if (!waitingPlayers.isEmpty()) {
@@ -76,7 +86,7 @@ class Game {
             val p = activePlayers.entrySet().iterator().next().getValue()
             p.enumerator.push( JsObject( JList( "action" -> JsString( "win" ) ) ) )
             "winner:" + p.username
-        } else {
+        } else { 
             "continue"
         }
     }
@@ -87,14 +97,14 @@ object Game {
     val playerMax = 2
 
     val XMAX = 600
-    val YMAX = 600
+    val YMAX = 1000
 
     def playerUsername( username: String ) = {
         "playerWithUsername-" + username
     }
 
-    def apply(): Game = {
-        val game = new Game() 
+    def apply( enumerator: PushEnumerator[JsValue] ): Game = {
+        val game = new Game( enumerator ) 
         game
     }
 }

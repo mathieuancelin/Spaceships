@@ -2,13 +2,14 @@ package core
 
 import scala.math._
 
-class Bullet( var x: Double, var y: Double, var angle: Double) {
+class Bullet( var from: String, var x: Double, var y: Double, var angle: Double) {
 	
 	var speed = 10.0
 	var pos = new Vector( x, y )
 	var vel = new Vector( 1, 0 )
 	var life = 50
 	var enabled = true
+
 	
 	def update() = {
 		pos.plusEq(this.vel) 
@@ -33,8 +34,8 @@ class Bullet( var x: Double, var y: Double, var angle: Double) {
 
 object Bullet {
 
-	def apply( x: Double, y: Double, angle: Double ): Bullet = {
-		val bullet = new Bullet( x, y, angle )
+	def apply( from: String, x: Double, y: Double, angle: Double ): Bullet = {
+		val bullet = new Bullet( from, x, y, angle )
 		bullet.reset( x, y, angle )
 		bullet
 	}
@@ -51,7 +52,7 @@ class SpaceShip( var x: Double, var y: Double ) {
 
 	def update() = {
 		//speed limit
-		val maxSpeed = 30
+		val maxSpeed = 20
 		if ( targetVel.isMagGreaterThan( maxSpeed ) ){
 			targetVel.normalise()
 			targetVel.multiplyEq( maxSpeed )

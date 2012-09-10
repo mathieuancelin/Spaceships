@@ -25,15 +25,16 @@ object Application extends Controller {
     val actionForm = Form( "message" -> text )  
 
     val playersEnumerator = Enumerator.imperative[JsValue]( )
-    val bulletsEnumerator = Enumerator.imperative[JsValue]( )
     val playersHub = Concurrent.hub[JsValue]( playersEnumerator )
-    val bulletsHub = Concurrent.hub[JsValue]( bulletsEnumerator )
     var sinkEnumerator = Enumerator.imperative[JsValue]( )
     var sinkIteratee = Iteratee.foreach[JsValue] ( _ match { case _ => } )
 
-    var currentGame = Option( Game() )
+    var currentGame = Option( Game( playersEnumerator ) )
 
     def index() = Action { implicit request =>
+        currentGame.map { game =>
+            game.start()
+        }
         Ok( views.html.board() )    
     }
 
@@ -56,11 +57,6 @@ object Application extends Controller {
 
     def playersSSE() = Action { implicit request =>
         Ok.feed( playersHub.getPatchCord().through( EventSource() ) ).as( "text/event-stream" )
-    }
-
-    // not used yet
-    def bulletSSE() = Action { implicit request =>
-        Ok.feed( bulletsHub.getPatchCord().through( EventSource() ) ).as( "text/event-stream" )
     }
 
     // for websocket capable devices
@@ -96,28 +92,16 @@ object Application extends Controller {
     }
 
     def processInputFromPlayer( username: String, message: JsValue) = {
-        // TODO : use game engine instead of relying on client side computing
         currentGame.map { game =>
             val key = Game.playerUsername( username )
             if ( game.activePlayers.containsKey( username ) ) {
                 val actor = game.activePlayers.get( username ).actor
                 ( message \ "action" ).as[String] match {
                     case "moving" => actor ! Move( ( message \ "x" ).as[Double],  ( message \ "y" ).as[Double] )
-                    //case "SHOOT" => JUGActors.shooter ! Shoot( ( message \ "x" ).as[Int], 
-                    //    ( message \ "y" ).as[Int], ( message \ "dir" ).as[String] )
+                    case "fire" => actor ! Shoot( ( message \ "x" ).as[Double],  ( message \ "y" ).as[Double] )
                     case _ =>
                 }
             }
-            //playersEnumerator.push( message )
         }
-    }
-
-    // TODO : get rid of it when game engine will be fully implemented
-    def kill( username: String ) = Action { implicit request =>
-        currentGame.map { game =>
-            Ok( game.kill( username ) )
-        }.getOrElse( 
-            InternalServerError( "There is currently no game running" ) 
-        )
     }
 }

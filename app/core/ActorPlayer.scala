@@ -19,12 +19,15 @@ import scala.collection.immutable.{ List => JList }
 
 case class Tick()
 case class Move(x: Double, y: Double)
-case class Shoot(x: Int, y: Int, dir: String) // from
-case class Killed(x: Int, y: Int)// from
+case class Shoot(x: Double, y: Double)
+case class Kill(x: Double, y: Double)
 
-class ActorPlayer( name: String, var posX: Double = 300.0, var posY: Double = 300.0 ) extends Actor with ActorLogging {
+class ActorPlayer( name: String, var posX: Double = 300.0, var posY: Double = 300.0, 
+    spaceShip: SpaceShip, currentGame: Option[Game] ) extends Actor with ActorLogging {
 
-    val spaceShip = new SpaceShip( posX, posY )
+    //val spaceShip = new SpaceShip( posX, posY )
+
+    var alive = true
 
     def receive = {
         case Move( x, y ) => {
@@ -43,84 +46,66 @@ class ActorPlayer( name: String, var posX: Double = 300.0, var posY: Double = 30
             }
             posX = spaceShip.pos.x
             posY = spaceShip.pos.y
-            push( "alive", spaceShip.angle, spaceShip.thrustSize )
+            push( "alive", "moving", spaceShip )
+        }
+        case Shoot( x, y) => {
+            val bullet = Bullet(name, spaceShip.pos.x, spaceShip.pos.y, spaceShip.angle)
+            bullet.vel.plusEq( spaceShip.vel ) 
+            push( "alive", "fire", spaceShip )
+            currentGame.map { game =>
+                game.shooter ! bullet
+            }
+        }
+        case Kill( x, y) => {
+            //if  ( spaceShip.around(x, y) ) {
+                //println( "[" + name + "] I'm dead bro !")
+                alive = false
+                /**currentGame.map { game =>
+                    game.kill( name )
+                }**/
+            //}
         }
     }
 
-    def push(status: String, angle: Double, thrustSize: Double ) = {
-        Application.playersEnumerator.push(JsObject(JList(
-            "name" -> JsString( name ),
-            "action" -> JsString( "moving" ),
-            "angle" -> JsNumber( angle ),
-            "thrust" -> JsNumber( thrustSize ),
-            "x" -> JsNumber( posX ),
-            "y" -> JsNumber( posY )
-        )))
+    def push( status: String, action: String, spaceShip: SpaceShip ) = {
+        if (alive) {
+            Application.playersEnumerator.push(JsObject(JList(
+                "name" -> JsString( name ),
+                "action" -> JsString( action ),
+                "angle" -> JsNumber( spaceShip.angle ),
+                "thrust" -> JsNumber( spaceShip.thrustSize ),
+                "x" -> JsNumber( posX ),
+                "y" -> JsNumber( posY ),
+                "velx" -> JsNumber( spaceShip.vel.x ),
+                "vely" -> JsNumber( spaceShip.vel.y )
+            )))
+        }
     }
 }
 
-/**
-class ShootActor extends Actor with ActorLogging {
+class ShootActor( currentGame: Option[Game] ) extends Actor with ActorLogging {
 
-    // init avec le from
+    var bullets = JList[Bullet]()
 
     def receive = {
         case Tick() => {
-            var listOfBullets = JList.empty[JsObject]
-            for ( shot <- JUGActors.shots ) {
-                shot.move()
-                if ( shot.done() ) {
-                    JUGActors.shots.remove( shot )
+            currentGame.map { game =>
+                bullets = bullets.filter { bullet =>
+                    bullet.update()
+                    for ( player <- game.activePlayers.values() ) {
+                        if (!player.username.equals( bullet.from )) {
+                            if (player.spaceShip.around( bullet.pos.x, bullet.pos.y )) {
+                                println( "[" + player.username + "] I'm dead bro !")
+                                game.kill( player.username )
+                                player.actor ! Kill( bullet.pos.x, bullet.pos.y )
+                            }
+                        }
+                        //player.actor ! Kill( bullet.pos.x, bullet.pos.y )
+                    }
+                    bullet.enabled
                 }
-                val bullet = JsObject(JList(
-                    "name" -> JsString( "agamebullet" ),
-                    "x" -> JsString( shot.x + "" ),
-                    "y" -> JsString( shot.y + "" ),
-                    "status" -> JsString( "bullet" )
-                ))
-                listOfBullets = listOfBullets :+ bullet
             }
-            Application.bulletsEnumerator.push(JsObject(JList(
-                "bullets" -> JsArray(listOfBullets)
-            )))
         }
-        case Shoot(x, y, dir) => JUGActors.shots.add( new Shot(x, y, dir) )
+        case bullet: Bullet => bullets = bullets.:+( bullet )
     }
-}
-
-class Shot(var x: Int, var y: Int, var dir: String) {
-    val INC = 5
-    def move() = {
-        dir match {
-            case "LEFT"  => x = x - INC
-            case "RIGHT" => x = x + INC
-            case "UP"    => y = y - INC
-            case "DOWN"  => y = y + INC
-        }
-        //for (ref <- players.values) {
-        //    ref ! Killed(x, y)
-        //}
-    }
-    def done() = {
-        (x, y) match {
-            case (xx, _) if xx < 0 => true
-            case (xx, _) if xx > JUGActors.XMAX => true
-            case (_, yy) if yy < 0 => true
-            case (_, yy) if yy > JUGActors.YMAX => true
-        }
-    }
-} **/
-
-object JUGActors {
-
-    /**
-    val shots = new ArrayList[Shot]
-
-    val shooter = Akka.system.actorOf(Props[ShootActor], name = "shootactor")
-
-    def start() = {
-        Akka.system.scheduler.schedule(0 millisecond, 200 milliseconds) {
-            shooter ! Tick()
-        }
-    }**/
 }
