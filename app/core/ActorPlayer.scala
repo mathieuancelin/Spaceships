@@ -83,6 +83,38 @@ class ActorPlayer( name: String, var posX: Double = 300.0, var posY: Double = 30
     }
 }
 
+class BulletActor( bullet: Bullet ) extends Actor with ActorLogging {
+    def receive = {
+        case Tick() => {
+            if (bullet.enabled) {
+                Application.playersEnumerator.push( JsObject(JList(
+                    "action" -> JsString( "shoot" ),
+                    "id" -> JsString( bullet.id ),
+                    "x" -> JsNumber( bullet.pos.x ),
+                    "y" -> JsNumber( bullet.pos.y ),
+                    "disabled" -> JsString( "false" )
+                )))
+                for ( player <- game.activePlayers.values() ) {
+                    if (!player.username.equals( bullet.from )) {
+                        if (player.spaceShip.around( bullet.pos.x, bullet.pos.y )) {
+                            println( "[" + player.username + "] I'm dead bro !")
+                            game.kill( player.username )
+                            player.actor ! Kill( bullet.pos.x, bullet.pos.y )
+                        }
+                    }
+                }
+            } else {
+                Application.playersEnumerator.push( JsObject(JList(
+                    "action" -> JsString( "shoot" ),
+                    "id" -> JsString( bullet.id ),
+                    "disabled" -> JsString( "true" )
+                )))
+                self ! PoisonPill
+            }
+        }
+    }
+}
+
 class ShootActor( currentGame: Option[Game] ) extends Actor with ActorLogging {
 
     var bullets = JList[Bullet]()
