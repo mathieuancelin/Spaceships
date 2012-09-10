@@ -30,6 +30,14 @@ ShipMoving = function(x,y) {
 		this.name = n;
 	}
 
+	this.setAngle = function(a) {
+		this.angle = a;
+	}
+
+	this.setThrustSize = function(thrust) {
+		thrustSize = thrust;
+	}
+
 	this.updateColor = function(n) {
 		color = n;
 	}

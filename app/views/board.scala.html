@@ -88,8 +88,8 @@
 
             players.each(function(index, ship) {
                 //ship.targetVel.copyFromXY(x, y);
-                ship.targetVel.multiplyEq(0.2);
-                ship.update(); 
+                //ship.targetVel.multiplyEq(0.2);
+                //ship.update(); 
                 with(ship.pos) {
                     if(x<0) x = canvas.width; 
                     else if(x>canvas.width) x = 0;
@@ -97,12 +97,12 @@
                     else if (y>canvas.height) y = 0; 
                 }
                 ship.draw(); 
-                if (debug) {
+                /**if (debug) {
                     c.beginPath()
                     c.arc(ship.pos.x, ship.pos.y, 40, 0, Math.PI*2,true)
                     c.closePath()
                     c.stroke()
-                }
+                }**/
             })         
             
             for (var i = 0; i < bullets.length; i++) {
@@ -110,10 +110,8 @@
                 if(!bullet.enabled) continue; 
                 bullet.update(); 
                 bullet.draw(c); 
-                if(!bullet.enabled)
-                {
+                if(!bullet.enabled){
                     spareBullets.push(bullet); 
-                    
                 }     
                 players.each(function(index, elem) {
                     var dead = elem.around(bullet.pos.x, bullet.pos.y)
@@ -203,8 +201,11 @@
                         players.put(data.name, ship) 
                         document.body.appendChild(ship.canvas)
                     } else {
-                        var ship = players.get(data.name)
-                        ship.targetVel.copyFromXY(data.x, data.y)
+                        var ship = players.get(data.name);
+                        ship.setAngle( data.angle );
+                        ship.setThrustSize( data.thrust );
+                        ship.pos.x = data.x;
+                        ship.pos.y = data.y;
                     }
                 }
                 if (data.action == "fire") {

@@ -14,11 +14,11 @@ import java.util.concurrent.ConcurrentHashMap
 import scala.collection.immutable.{ List => JList }
 
 
-case class Player( username: String, enumerator: PushEnumerator[JsValue])
+case class Player( username: String, enumerator: PushEnumerator[JsValue], actor: ActorRef )
 
 class Game {
 
-	val players = new ConcurrentHashMap[String, ActorRef]
+    val system = ActorSystem("CurrentGameSystem")
 
     var activePlayers = new ConcurrentHashMap[String, Player]
 
@@ -26,32 +26,32 @@ class Game {
 
     var waitingPlayersName = new ArrayList[String]
 
-    def createPlayerActor( username: String ) = {
-    	val key = Game.playerUsername( username )
-        if ( !players.containsKey( key ) ) {
-            val actor = Akka.system.actorOf(Props(new ActorPlayer(username)), name = key)
-            players.putIfAbsent( key, actor)
-        }
+    def start() = {
+    }
+
+    def stop() = {
+        system.shutdown()
     }
 
     def createUser( username: String ) = {
-    	createPlayerActor( username )
         if ( activePlayers.size < Game.playerMax) { 
             createUserIfAbsent( username, "play", activePlayers )
         } else {
         	if ( !waitingPlayersName.contains( username ) ) {
         		waitingPlayersName.add( username )
         	}
-            createUserIfAbsent( username, "wait", waitingPlayers )
+            createUserIfAbsent( username, "wait", waitingPlayers ) 
         }
     }
 
     def createUserIfAbsent( username: String, action: String, map: ConcurrentHashMap[String, Player] ) = {
     	if ( !map.containsKey( username ) ) {
-            map.put( username, Player( username, Enumerator.imperative[JsValue]( ) ) )
+            val key = Game.playerUsername( username )
+            val actor = system.actorOf(Props(new ActorPlayer(username)), name = key)
+            map.put( username, Player( username, Enumerator.imperative[JsValue]( ), actor ) )
         } 
         val pushEnum = map.get( username ).enumerator
-        Akka.system.scheduler.scheduleOnce(200 milliseconds) {
+        system.scheduler.scheduleOnce(200 milliseconds) {
             pushEnum.push( JsObject( JList( "action" -> JsString( "play" ) ) ) )
         }
         pushEnum
@@ -61,6 +61,7 @@ class Game {
     	val out = Option( activePlayers.get( username ) )
         out.map { player =>
             player.enumerator.push( JsObject( JList( "action" -> JsString( "kill" ) ) ) )
+            player.actor ! PoisonPill
             activePlayers.remove( username )
             if (!waitingPlayers.isEmpty()) {
                 val waitingPlayer = waitingPlayers.get( waitingPlayersName.iterator().next() )
@@ -85,7 +86,15 @@ object Game {
 
     val playerMax = 2
 
+    val XMAX = 600
+    val YMAX = 600
+
     def playerUsername( username: String ) = {
         "playerWithUsername-" + username
+    }
+
+    def apply(): Game = {
+        val game = new Game() 
+        game
     }
 }

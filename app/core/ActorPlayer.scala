@@ -18,48 +18,48 @@ import play.api.libs.json._
 import scala.collection.immutable.{ List => JList }
 
 case class Tick()
-case class Move(dir: String)
+case class Move(x: Double, y: Double)
 case class Shoot(x: Int, y: Int, dir: String) // from
 case class Killed(x: Int, y: Int)// from
 
-class ActorPlayer(name: String, var posX: Int = 0, var posY: Int = 0) extends Actor with ActorLogging {
+class ActorPlayer( name: String, var posX: Double = 300.0, var posY: Double = 300.0 ) extends Actor with ActorLogging {
 
-    // la socket de retour    
-    val INC = 5
+    val spaceShip = new SpaceShip( posX, posY )
 
     def receive = {
-        case Move("LEFT")  => {
-            if (posX > 0) posX = posX - INC
-            push("alive")
-        }
-        case Move("RIGHT") => {
-            if (posX < JUGActors.XMAX) posX = posX + INC
-            push("alive")
-        }
-        case Move("UP")    => {
-            if (posY > 0) posY = posY - INC
-            push("alive")
-        }
-        case Move("DOWN")  => {
-            if (posY < JUGActors.YMAX) posY = posY + INC 
-            push("alive")
-        }       
-        case Killed(x, y)  => {
-            if (x == posX && y == posY)  self ! PoisonPill
-            push("killed")
+        case Move( x, y ) => {
+            spaceShip.targetVel.copyFromXY( x, y )
+            spaceShip.targetVel.multiplyEq( 0.2 )
+            spaceShip.update()
+            if ( spaceShip.pos.x < 1 ) {
+                spaceShip.pos.x = Game.XMAX
+            } else if ( spaceShip.pos.x > Game.XMAX) {
+                spaceShip.pos.x = 1
+            }
+            if ( spaceShip.pos.y < 1) {
+                spaceShip.pos.y = Game.YMAX
+            } else if ( spaceShip.pos.y > Game.YMAX ) {
+                spaceShip.pos.y = 1
+            }
+            posX = spaceShip.pos.x
+            posY = spaceShip.pos.y
+            push( "alive", spaceShip.angle, spaceShip.thrustSize )
         }
     }
 
-    def push(status: String) = {
+    def push(status: String, angle: Double, thrustSize: Double ) = {
         Application.playersEnumerator.push(JsObject(JList(
             "name" -> JsString( name ),
+            "action" -> JsString( "moving" ),
+            "angle" -> JsNumber( angle ),
+            "thrust" -> JsNumber( thrustSize ),
             "x" -> JsNumber( posX ),
-            "y" -> JsNumber( posY ),
-            "status" -> JsString( status )
+            "y" -> JsNumber( posY )
         )))
     }
 }
 
+/**
 class ShootActor extends Actor with ActorLogging {
 
     // init avec le from
@@ -109,13 +109,11 @@ class Shot(var x: Int, var y: Int, var dir: String) {
             case (_, yy) if yy > JUGActors.YMAX => true
         }
     }
-}
+} **/
 
 object JUGActors {
 
-    val XMAX = 600
-    val YMAX = 600
-
+    /**
     val shots = new ArrayList[Shot]
 
     val shooter = Akka.system.actorOf(Props[ShootActor], name = "shootactor")
@@ -124,5 +122,5 @@ object JUGActors {
         Akka.system.scheduler.schedule(0 millisecond, 200 milliseconds) {
             shooter ! Tick()
         }
-    }
+    }**/
 }

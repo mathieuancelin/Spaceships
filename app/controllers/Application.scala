@@ -31,7 +31,7 @@ object Application extends Controller {
     var sinkEnumerator = Enumerator.imperative[JsValue]( )
     var sinkIteratee = Iteratee.foreach[JsValue] ( _ match { case _ => } )
 
-    var currentGame = Option( new Game() )
+    var currentGame = Option( Game() )
 
     def index() = Action { implicit request =>
         Ok( views.html.board() )    
@@ -97,7 +97,19 @@ object Application extends Controller {
 
     def processInputFromPlayer( username: String, message: JsValue) = {
         // TODO : use game engine instead of relying on client side computing
-        playersEnumerator.push( message )
+        currentGame.map { game =>
+            val key = Game.playerUsername( username )
+            if ( game.activePlayers.containsKey( username ) ) {
+                val actor = game.activePlayers.get( username ).actor
+                ( message \ "action" ).as[String] match {
+                    case "moving" => actor ! Move( ( message \ "x" ).as[Double],  ( message \ "y" ).as[Double] )
+                    //case "SHOOT" => JUGActors.shooter ! Shoot( ( message \ "x" ).as[Int], 
+                    //    ( message \ "y" ).as[Int], ( message \ "dir" ).as[String] )
+                    case _ =>
+                }
+            }
+            //playersEnumerator.push( message )
+        }
     }
 
     // TODO : get rid of it when game engine will be fully implemented
