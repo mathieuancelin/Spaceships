@@ -30,8 +30,9 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
     val shooter = system.actorOf(Props(new ShootActor(Option(this))), name = "currentshootactor")
 
     def start() = {
-        system.scheduler.schedule(0 millisecond, 20 milliseconds) {
-            shooter ! Tick()
+        system.scheduler.schedule(0 millisecond, 28 milliseconds) {
+            //shooter ! Tick()
+            system.eventStream.publish( Tick() ) 
         }
     }
 
