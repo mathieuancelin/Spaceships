@@ -98,8 +98,8 @@ object Game {
 
     val playerMax = 2
 
-    val XMAX = 600
-    val YMAX = 1000
+    var XMAX = 600
+    var YMAX = 1000
 
     def playerUsername( username: String ) = {
         "playerWithUsername-" + username

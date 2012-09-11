@@ -24,6 +24,8 @@ object Application extends Controller {
     val usernameForm = Form( "username" -> text )  
     val actionForm = Form( "message" -> text )  
 
+    val sizeForm = Form( tuple( "width" -> text, "height" -> text ) )  
+
     val playersEnumerator = Enumerator.imperative[JsValue]( )
     val bulletsEnumerator = Enumerator.imperative[JsValue]( )
 
@@ -104,6 +106,17 @@ object Application extends Controller {
             Ok( game.kill( username ) )
         }.getOrElse( 
             InternalServerError( "There is currently no game running" ) 
+        )
+    }
+
+    def defineCanvasSize() = Action { implicit request =>
+        sizeForm.bindFromRequest.fold (
+            formWithErrors => BadRequest( "You need to post 'width' and 'height' values!" ),
+            { form =>
+                Game.XMAX = Integer.valueOf(form._1)
+                Game.YMAX = Integer.valueOf(form._2)
+                Ok
+            } 
         )
     }
 
