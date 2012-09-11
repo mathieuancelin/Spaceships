@@ -2,8 +2,10 @@
 
 @main("Ready to Play ?") {
 
+	<h2 style="color: #FFFFFF;">Type your nickname : </h2>
+	<br/>
     <form action="@routes.Application.startGame()" method="POST">
-        <input type="text" name="username" id="username"><br/>
+        <input type="text" name="username" id="username"><br/><br/>
         <input type="submit" id="submit" value="Play" class="btn btn-primary">
     </form>
 }

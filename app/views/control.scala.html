@@ -43,8 +43,15 @@
         </style>
     </head>
     <body>
+        <div id="win" style="display:none;"><h1><h1>YOU WIN !!!</h1><br/><br/><a class="btn btn-primary" href="@routes.Application.mobileStart()">Play again</a></div>
+        <div id="lose" style="display:none;"><br/><h1>YOU'RE DEAD !!!</h1><br/><br/><a class="btn btn-primary" href="@routes.Application.mobileStart()">Play again</a></div>
+         <div id="wait" style="display:none;"><br/><h1>Waiting to join current game ...</h1></div>
         <script>
 
+            $(window).ready(function() {
+                $('#win').hide()
+                $('#lose').hide()
+            })
             var canvas,
             c, // c is the canvas' context 2D
             container, 
@@ -139,15 +146,26 @@
                 } else {
                     c.fillText("AJAX " + waiting + " => " + shots + " / " + maxShot + " bullets shot", 3, 13) 
                 }**/
+                if (waiting) {
+                    $('#wait').show()
+                    $('#pad').hide()
+                } else {
+                    $('#wait').hide()
+                    $('#pad').show()
+                }
                 if (status == "dead") {
                     c.font = "25pt Calibri";
                     c.fillStyle = "#ff0000";
                     c.fillText("YOU'RE DEAD", 30, halfHeight) 
+                    $('#pad').hide()
+                    $('#lose').show()
                 }
                 if (status == "win") {
                     c.font = "25pt Calibri";
                     c.fillStyle = "#ff0000";
                     c.fillText("YOU WIN", 30, halfHeight) 
+                    $('#pad').hide()
+                    $('#win').show()
                 }
                 c.closePath(); 
                 c.stroke();
@@ -279,6 +297,7 @@
                 c = canvas.getContext( '2d' );
                 container = document.createElement( 'div' );
                 container.className = "container";
+                container.id = "pad"
 
                 document.body.appendChild( container );
                 container.appendChild(canvas);  

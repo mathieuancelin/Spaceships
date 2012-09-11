@@ -62,7 +62,7 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
         } 
         val pushEnum = map.get( username ).enumerator
         system.scheduler.scheduleOnce(200 milliseconds) {
-            pushEnum.push( JsObject( JList( "action" -> JsString( "play" ) ) ) )
+            pushEnum.push( JsObject( JList( "action" -> JsString( action ) ) ) )
         }
         pushEnum
     }
@@ -96,7 +96,7 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
 
 object Game {
 
-    val playerMax = 2
+    val playerMax = 3
 
     var XMAX = 600
     var YMAX = 1000

@@ -89,7 +89,7 @@ ShipMoving = function(x,y) {
 
             // spaceship
 			c.beginPath();
-            c.fillText(this.name, -30, -15);
+            c.fillText(this.name.split("-")[0], -30, -15);
 			c.moveTo(-10, -10);
 			c.lineTo(-10, 10);
             c.lineTo(0, 4);

@@ -39,8 +39,9 @@ object Application extends Controller {
 
     def index() = Action { implicit request =>
         currentGame.map { game =>
-            game.start()
+            game.stop()
         }
+        currentGame = Option( Game( playersEnumerator ) )
         Ok( views.html.board() )    
     }
 
@@ -56,7 +57,7 @@ object Application extends Controller {
         usernameForm.bindFromRequest.fold (
             formWithErrors => BadRequest( "You need to post a 'username' value!" ),
             { username =>
-                Redirect("/mobile/" + username + "/pad")
+                Redirect("/mobile/" + username + "-" + System.nanoTime() + "/pad")
             } 
         )
     }

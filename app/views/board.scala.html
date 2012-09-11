@@ -42,6 +42,7 @@
         </style>
     </head>
     <body>
+    <div id="win" style="display:none;"><h1></h1><br/><br/><a class="btn btn-primary" href="@routes.Application.index()">New game</a></div>
     <script>
 
         var debug = false
@@ -118,8 +119,11 @@
                     var dead = elem.around(bullet.pos.x, bullet.pos.y)
                     if (dead) {
                         $.post("/mobile/" + elem.name + "/pad/kill", function(data) {
-                            if (data.substring(0, 3) == "win") {
-                                console.log("winner is " + data)
+                            if (data.split(":")[0] == "winner") {
+                                // TODO : jquery add win div
+                                $('#win h1').html("The winner is : " + data.split(":")[1])
+                                $('#board').hide()
+                                $('#win').show()
                             }
                         })
                     }
@@ -181,6 +185,7 @@
             c = canvas.getContext( '2d' );
             container = document.createElement( 'div' );
             container.className = "container";
+            container.id = "board"
 
             document.body.appendChild( container );
             container.appendChild(canvas);  
@@ -192,6 +197,7 @@
         }
 
         $(window).ready(function() {
+            $('#win').hide()
             var playersSource = new EventSource( '@routes.Application.playersSSE()' )
             var bulletsSource = new EventSource( '@routes.Application.bulletsSSE()' )
             playersSource.onmessage = function ( event ) {
