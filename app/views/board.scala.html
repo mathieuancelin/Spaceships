@@ -67,6 +67,8 @@
             bullets = [],
             spareBullets = [];
 
+        var waiting = [];
+
         var players = new HashMap()
         var playerBullets = new HashMap()
 
@@ -130,6 +132,13 @@
                 })         
             }
 
+            c.lineCap = 'square'
+            c.font = "12pt Calibri";
+            c.fillStyle = "#fff"; 
+            c.beginPath();
+            c.fillText( waiting.length + " waiting players ... ", 10, 20 );
+            c.closePath(); 
+            c.stroke();
             /**playerBullets.each(function(index, bullet) {
                 bullet.draw(c)
             }) **/  
@@ -240,6 +249,9 @@
                     console.log("killing " + data.name)
                     var ship = players.get(data.name)
                     ship.around( ship.pos.x, ship.pos.y )
+                }
+                if (data.action == "waitinglist") {
+                    waiting = data.players
                 }
             }
             bulletsSource.onmessage = function ( event ) {

@@ -74,6 +74,7 @@ object Application extends Controller {
     def mobilePadStream( username: String ) = WebSocket.async[JsValue] { request =>
         currentGame.map { game =>
             var out = game.createUser( username )
+            game.pushWaitingList( playersEnumerator )
             var in = Iteratee.foreach[JsValue] ( _ match {
                 case message: JsObject => {
                     processInputFromPlayer( username, message )
@@ -90,6 +91,7 @@ object Application extends Controller {
     def padAction( username: String ) = Action { implicit request =>
         currentGame.map { game =>
             game.createUser( username )
+            //game.pushWaitingList( playersEnumerator )
             actionForm.bindFromRequest.fold (
                 formWithErrors => BadRequest( "You have to provide an 'action' value." ),
                 { action =>

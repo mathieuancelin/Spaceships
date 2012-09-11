@@ -13,7 +13,7 @@ import java.util._
 import java.util.concurrent.ConcurrentHashMap
 import scala.collection.immutable.{ List => JList }
 import controllers._
-
+import scala.collection.JavaConversions._
 
 case class Player( username: String, spaceShip: SpaceShip, enumerator: PushEnumerator[JsValue], actor: ActorRef )
 
@@ -83,6 +83,7 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
                 waitingPlayer.enumerator.push( JsObject( JList( "action" -> JsString( "play" ) ) ) )
             }
         }
+        pushWaitingList( Application.playersEnumerator )
         if (activePlayers.size == 1 && waitingPlayers.isEmpty()) {
             // stop game and call winner
             val p = activePlayers.entrySet().iterator().next().getValue()
@@ -92,11 +93,19 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
             "continue"
         }
     }
+
+    def pushWaitingList( enumerator: PushEnumerator[JsValue] ) = {
+        var waiting = JList[JsObject]( )
+        for ( player <- waitingPlayers.values() ) {
+            waiting = waiting :+ JsObject( JList( "player" -> JsString( player.username ) ) )
+        }
+        enumerator.push( JsObject( JList( "action" -> JsString( "waitinglist" ), "players" -> JsArray( waiting ) ) ) )
+    }
 }
 
 object Game {
 
-    val playerMax = 3
+    val playerMax = 1
 
     var XMAX = 600
     var YMAX = 1000
