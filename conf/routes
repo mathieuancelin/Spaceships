@@ -5,8 +5,10 @@
 # Home page
 GET     /                               controllers.Application.index()
 GET     /mobile                         controllers.Application.mobileStart()
+GET     /m                              controllers.Application.mobileStart()
 POST    /mobile/start                   controllers.Application.startGame()
 GET     /mobile/:username/pad           controllers.Application.mobilePad( username )
+GET     /m/:username/p                  controllers.Application.mobilePad( username )
 GET     /mobile/:username/stream        controllers.Application.mobilePadStream( username )
 GET     /game/players                   controllers.Application.playersSSE()
 GET     /game/bullets                   controllers.Application.bulletsSSE()

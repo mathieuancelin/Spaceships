@@ -131,11 +131,14 @@
                 c.font = "12pt Calibri";
                 c.fillStyle = "#fff"; 
                 c.beginPath();
-                if (websocketCapable) {
+                c.fillText("Ammo", halfWidth - 22, 20 ) 
+                c.fillText("Commands zone", halfWidth - (halfWidth / 2) - 60, 20 ) 
+                c.fillText("Fire zone", halfWidth + (halfWidth / 2) - 20, 20 ) 
+                /**if (websocketCapable) {
                     c.fillText("WebSocket " + waiting + " => " + shots + " / " + maxShot + " bullets shot", 3, 13) 
                 } else {
                     c.fillText("AJAX " + waiting + " => " + shots + " / " + maxShot + " bullets shot", 3, 13) 
-                }
+                }**/
                 if (status == "dead") {
                     c.font = "25pt Calibri";
                     c.fillStyle = "#ff0000";
@@ -151,6 +154,26 @@
 
                 //socket.send( JSON.stringify( { action: "moving", name: "@username", controlx: x, controly: y } ) )
                 move(x, y)
+
+                var fromX = halfWidth - 15
+                var fromY = 27
+                var height = canvas.height - 10
+                c.lineWidth = 1;
+                c.fillStyle = "rgb(64,64,64)";  
+                c.fillRect (fromX - 2, fromY - 2, 34, height + 2);  
+                c.strokeStyle = "rgb(96,96,96)"
+                c.beginPath();  
+                c.moveTo(fromX,fromY);  
+                c.lineTo(fromX + 30,fromY);  
+                c.lineTo(fromX + 30,fromY + height);
+                c.lineTo(fromX,fromY + height);
+                c.lineTo(fromX,fromY);  
+                c.closePath();  
+                c.stroke();
+
+                c.fillStyle = "00CCFF";  
+                var value = (height * (maxShot - shots)) / maxShot;
+                c.fillRect (fromX, fromY + (height - value), 30, height - (height - value));
 
                 if(touchable && (status != "dead")) {
                 
