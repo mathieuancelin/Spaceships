@@ -30,10 +30,10 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
     val shooter = system.actorOf(Props(new ShootActor(Option(this))), name = "currentshootactor")
 
     def start() = {
-        system.scheduler.schedule(0 millisecond, 28 milliseconds) {
+        /**system.scheduler.schedule(0 millisecond, 28 milliseconds) {
             //shooter ! Tick()
-            system.eventStream.publish( Tick() ) 
-        }
+            system.eventStream.publish( Tick() )  
+        }**/
     }
 
     def stop() = {
@@ -72,6 +72,7 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
         out.map { player =>
             player.enumerator.push( JsObject( JList( "action" -> JsString( "kill" ) ) ) )
             enumerator.push( JsObject( JList( "action" -> JsString( "kill" ), "name" -> JsString( username ) ) ) )
+            player.actor ! Kill( 0, 0 )
             player.actor ! PoisonPill
             activePlayers.remove( username )
             if (!waitingPlayers.isEmpty()) {

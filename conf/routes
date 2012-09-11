@@ -9,7 +9,8 @@ POST    /mobile/start                   controllers.Application.startGame()
 GET     /mobile/:username/pad           controllers.Application.mobilePad( username )
 GET     /mobile/:username/stream        controllers.Application.mobilePadStream( username )
 GET     /game/players                   controllers.Application.playersSSE()
+GET     /game/bullets                   controllers.Application.bulletsSSE()
 POST    /mobile/:username/pad/action    controllers.Application.padAction( username )
-
+POST    /mobile/:username/pad/kill      controllers.Application.killAction( username )
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

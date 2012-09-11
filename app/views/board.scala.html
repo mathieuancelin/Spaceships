@@ -106,7 +106,7 @@
                 }**/
             })         
             
-            /**for (var i = 0; i < bullets.length; i++) {
+            for (var i = 0; i < bullets.length; i++) {
                 var bullet = bullets[i]; 
                 if(!bullet.enabled) continue; 
                 bullet.update(); 
@@ -124,11 +124,11 @@
                         })
                     }
                 })         
-            }**/
+            }
 
-            playerBullets.each(function(index, bullet) {
+            /**playerBullets.each(function(index, bullet) {
                 bullet.draw(c)
-            })   
+            }) **/  
             
             if(touchable) {
             
@@ -163,7 +163,7 @@
             } 
         }
 
-        /**function makeBullet(x, y, angle, velx, vely) {
+        function makeBullet(x, y, angle, velx, vely) {
             var bullet;
             if(spareBullets.length>0) {
                 bullet = spareBullets.pop(); 
@@ -173,7 +173,7 @@
                 bullets.push(bullet);
             }
             bullet.vel.plusEq( new Vector2(velx, vely)); 
-        }**/
+        }
 
         function setupCanvas() {
             
@@ -193,6 +193,7 @@
 
         $(window).ready(function() {
             var playersSource = new EventSource( '@routes.Application.playersSSE()' )
+            var bulletsSource = new EventSource( '@routes.Application.bulletsSSE()' )
             playersSource.onmessage = function ( event ) {
                 var data = JSON.parse(event.data)
                 if (data.action == "moving") {
@@ -214,9 +215,9 @@
                         ship.pos.y = data.y;
                     }
                 }
-                /**if (data.action == "fire") {
+                if (data.action == "fire") {
                     makeBullet(data.x, data.y, data.angle, data.velx, data.vely)
-                }**/
+                }
                 if (data.action == "shoot") {
                     if (data.disabled == "true") {
                         playerBullets.remove(data.id)
@@ -233,6 +234,21 @@
                     console.log("killing " + data.name)
                     var ship = players.get(data.name)
                     ship.around( ship.pos.x, ship.pos.y )
+                }
+            }
+            bulletsSource.onmessage = function ( event ) {
+                var data = JSON.parse(event.data)
+                if (data.action == "shoot") {
+                    if (data.disabled == "true") {
+                        playerBullets.remove(data.id)
+                    } else {
+                        if (!playerBullets.containsKey(data.id)) {
+                            var bullet = new Bullet(data.x, data.y, 0); 
+                            playerBullets.put(data.id, bullet) 
+                        } 
+                        var bullet = playerBullets.get(data.id);
+                        bullet.reset(data.x, data.y, 0)
+                    }
                 }
             }
         })

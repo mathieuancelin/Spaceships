@@ -31,6 +31,8 @@ class ActorPlayer( name: String, var posX: Double = 300.0, var posY: Double = 30
 
     def receive = {
         case Move( x, y ) => {
+            val oldX = posX
+            val oldY = posY
             spaceShip.targetVel.copyFromXY( x, y )
             spaceShip.targetVel.multiplyEq( 0.2 )
             spaceShip.update()
@@ -46,17 +48,19 @@ class ActorPlayer( name: String, var posX: Double = 300.0, var posY: Double = 30
             }
             posX = spaceShip.pos.x
             posY = spaceShip.pos.y
-            push( "alive", "moving", spaceShip )
+            //if ( !(posX == oldX && posY == oldY) ) {
+                push( "alive", "moving", spaceShip )
+            //}
         }
         case Shoot( x, y) => {
             val bullet = Bullet(name, spaceShip.pos.x, spaceShip.pos.y, spaceShip.angle)
             bullet.vel.plusEq( spaceShip.vel ) 
-            //push( "alive", "fire", spaceShip )
-            currentGame.map { game =>
+            push( "alive", "fire", spaceShip )
+            /**currentGame.map { game =>
                 val act = game.system.actorOf(Props(new BulletActor(bullet, currentGame)), name = "bullet-" + bullet.from + "-" + bullet.id)
                 game.system.eventStream.subscribe(act, classOf[Tick])
                 //game.shooter ! bullet
-            }
+            }**/
         }
         case Kill( x, y) => {
             //if  ( spaceShip.around(x, y) ) {
@@ -90,7 +94,7 @@ class BulletActor( bullet: Bullet, currentGame: Option[Game] ) extends Actor wit
         case Tick() => {
             bullet.update()
             if (bullet.enabled) {
-                Application.playersEnumerator.push( JsObject(JList(
+                Application.bulletsEnumerator.push( JsObject(JList(
                     "action" -> JsString( "shoot" ),
                     "id" -> JsString( bullet.id ),
                     "x" -> JsNumber( bullet.pos.x ),
@@ -109,7 +113,7 @@ class BulletActor( bullet: Bullet, currentGame: Option[Game] ) extends Actor wit
                     }
                 }
             } else {
-                Application.playersEnumerator.push( JsObject(JList(
+                Application.bulletsEnumerator.push( JsObject(JList(
                     "action" -> JsString( "shoot" ),
                     "id" -> JsString( bullet.id ),
                     "disabled" -> JsString( "true" )
@@ -133,7 +137,7 @@ class ShootActor( currentGame: Option[Game] ) extends Actor with ActorLogging {
                 bullets = bullets.filter { bullet =>
                     bullet.update()
                     if (bullet.enabled) {
-                        Application.playersEnumerator.push( JsObject(JList(
+                        Application.bulletsEnumerator.push( JsObject(JList(
                             "action" -> JsString( "shoot" ),
                             "id" -> JsString( bullet.id ),
                             "x" -> JsNumber( bullet.pos.x ),
@@ -150,7 +154,7 @@ class ShootActor( currentGame: Option[Game] ) extends Actor with ActorLogging {
                             }
                         }
                     } else {
-                        Application.playersEnumerator.push( JsObject(JList(
+                        Application.bulletsEnumerator.push( JsObject(JList(
                             "action" -> JsString( "shoot" ),
                             "id" -> JsString( bullet.id ),
                             "disabled" -> JsString( "true" )

@@ -25,7 +25,11 @@ object Application extends Controller {
     val actionForm = Form( "message" -> text )  
 
     val playersEnumerator = Enumerator.imperative[JsValue]( )
+    val bulletsEnumerator = Enumerator.imperative[JsValue]( )
+
     val playersHub = Concurrent.hub[JsValue]( playersEnumerator )
+    val bulletsHub = Concurrent.hub[JsValue]( bulletsEnumerator )
+
     var sinkEnumerator = Enumerator.imperative[JsValue]( )
     var sinkIteratee = Iteratee.foreach[JsValue] ( _ match { case _ => } )
 
@@ -59,6 +63,10 @@ object Application extends Controller {
         Ok.feed( playersHub.getPatchCord().through( EventSource() ) ).as( "text/event-stream" )
     }
 
+    def bulletsSSE() = Action { implicit request =>
+        Ok.feed( bulletsHub.getPatchCord().through( EventSource() ) ).as( "text/event-stream" )
+    }
+
     // for websocket capable devices
     def mobilePadStream( username: String ) = WebSocket.async[JsValue] { request =>
         currentGame.map { game =>
@@ -86,6 +94,14 @@ object Application extends Controller {
                     Ok
                 } 
             )
+        }.getOrElse( 
+            InternalServerError( "There is currently no game running" ) 
+        )
+    }
+
+    def killAction( username: String ) = Action { implicit request =>
+        currentGame.map { game =>
+            Ok( game.kill( username ) )
         }.getOrElse( 
             InternalServerError( "There is currently no game running" ) 
         )
