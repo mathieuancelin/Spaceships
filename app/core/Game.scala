@@ -48,11 +48,12 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
         if ( activePlayers.size < Game.playerMax) { 
             createUserIfAbsent( username, "play", activePlayers )
         } else {
+            if (activePlayers.containsKey()) {
+                return activePlayers.get( username ).enumerator
+            } 
         	if ( !waitingPlayersName.contains( username ) ) {
         		waitingPlayersName.add( username )
-        	} else {
-                return activePlayers.get( username ).enumerator
-            }
+        	}
             createUserIfAbsent( username, "wait", waitingPlayers ) 
         }
     }
@@ -110,7 +111,7 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
 
 object Game {
 
-    val playerMax = 5
+    val playerMax = 3
 
     def playerUsername( username: String ) = {
         "playerWithUsername-" + username

@@ -142,7 +142,11 @@
             c.font = "12pt Calibri";
             c.fillStyle = "#fff"; 
             c.beginPath();
-            c.fillText( waiting.length + " waiting players ... ", 10, 20 );
+            var message = waiting.length + " waiting players";
+            if (waiting.length <= 0) {
+                message = message + " ... "
+            }
+            c.fillText( message, 10, 20 );
             c.closePath(); 
             c.stroke();
             /**playerBullets.each(function(index, bullet) {

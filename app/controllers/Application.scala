@@ -32,7 +32,7 @@ object Application extends Controller {
     val bulletsHub = Concurrent.hub[JsValue]( bulletsEnumerator )
 
     var sinkEnumerator = Enumerator.imperative[JsValue]( )
-    var sinkIteratee = Iteratee.foreach[JsValue] ( _ match { case _ => } )
+    var sinkIteratee = Iteratee.foreach[JsValue] { _ => Logger("Application").info("Message on sink Iteratee ...") }
 
     var currentGame = Option( Game( playersEnumerator ) )
 
@@ -79,7 +79,14 @@ object Application extends Controller {
                     processInputFromPlayer( username, message )
                 }
                 case _ => // do nothing
-            })
+            }).mapDone {
+                _ => {
+                    Logger("Application").info("Player '" + username + "' disconnected.")
+                    currentGame.map { game =>
+                        game.kill( username )
+                    }
+                }
+            }
             Promise.pure( ( in, out ) )
         }.getOrElse( 
             Promise.pure( ( sinkIteratee, sinkEnumerator ) ) 

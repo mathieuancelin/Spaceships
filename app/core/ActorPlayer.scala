@@ -50,9 +50,7 @@ class ActorPlayer( name: String, var posX: Double = 300.0, var posY: Double = 30
             }
             posX = spaceShip.pos.x
             posY = spaceShip.pos.y
-            //if ( !(posX == oldX && posY == oldY) ) {
-                push( "alive", "moving", spaceShip )
-            //}
+            push( "alive", "moving", spaceShip )
         }
         case Shoot( x, y) => {
             val bullet = Bullet(name, spaceShip.pos.x, spaceShip.pos.y, spaceShip.angle)
