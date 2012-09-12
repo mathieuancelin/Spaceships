@@ -28,6 +28,11 @@
             }
             body {
                 background-color: #000000;
+                background-image: -webkit-radial-gradient(600px 300px, circle, #778, #011 60%);
+                background-image: -moz-radial-gradient(600px 300px, circle, #444, #000 60%);
+                background-image: -o-radial-gradient(600px 300px, circle, #444, #000 60%);
+                background-image: radial-gradient(600px 300px, circle, #444, #000 60%);
+                color: #fff;
                 margin: 0px;
             }
             canvas {
@@ -123,8 +128,9 @@
                         $.post("/mobile/" + elem.name + "/pad/kill", function(data) {
                             if (data.split(":")[0] == "winner") {
                                 // TODO : jquery add win div
-                                $('#win h1').html("The winner is : " + data.split(":")[1])
+                                $('#win h1').html("The winner is : " + data.split(":")[1].split("-")[0])
                                 $('#board').hide()
+                                $('#board').html("")
                                 $('#win').show()
                             }
                         })

@@ -23,7 +23,6 @@ object Application extends Controller {
 
     val usernameForm = Form( "username" -> text )  
     val actionForm = Form( "message" -> text )  
-
     val sizeForm = Form( tuple( "width" -> text, "height" -> text ) )  
 
     val playersEnumerator = Enumerator.imperative[JsValue]( )
@@ -57,7 +56,7 @@ object Application extends Controller {
         usernameForm.bindFromRequest.fold (
             formWithErrors => BadRequest( "You need to post a 'username' value!" ),
             { username =>
-                Redirect("/mobile/" + username.replace(" ", "") + "-" + System.nanoTime() + "/pad")
+                Redirect("/mobile/" + username.replace(" ", "").replace("-", "") + "-" + System.nanoTime() + "/pad")
             } 
         )
     }
