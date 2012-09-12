@@ -57,7 +57,7 @@ object Application extends Controller {
         usernameForm.bindFromRequest.fold (
             formWithErrors => BadRequest( "You need to post a 'username' value!" ),
             { username =>
-                Redirect("/mobile/" + username + "-" + System.nanoTime() + "/pad")
+                Redirect("/mobile/" + username.replace(" ", "") + "-" + System.nanoTime() + "/pad")
             } 
         )
     }
@@ -116,8 +116,10 @@ object Application extends Controller {
         sizeForm.bindFromRequest.fold (
             formWithErrors => BadRequest( "You need to post 'width' and 'height' values!" ),
             { form =>
-                Game.XMAX = Integer.valueOf(form._1)
-                Game.YMAX = Integer.valueOf(form._2)
+                currentGame.map { game =>
+                    game.XMAX = Integer.valueOf(form._1)
+                    game.YMAX = Integer.valueOf(form._2)
+                }
                 Ok
             } 
         )

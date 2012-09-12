@@ -29,6 +29,9 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
 
     val shooter = system.actorOf(Props(new ShootActor(Option(this))), name = "currentshootactor")
 
+    var XMAX = 600
+    var YMAX = 1000
+
     def start() = {
         /**system.scheduler.schedule(0 millisecond, 28 milliseconds) {
             //shooter ! Tick()
@@ -41,13 +44,15 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
         system.shutdown()
     }
 
-    def createUser( username: String ) = {
+    def createUser( username: String ):PushEnumerator[JsValue] = {
         if ( activePlayers.size < Game.playerMax) { 
             createUserIfAbsent( username, "play", activePlayers )
         } else {
         	if ( !waitingPlayersName.contains( username ) ) {
         		waitingPlayersName.add( username )
-        	}
+        	} else {
+                return activePlayers.get( username ).enumerator
+            }
             createUserIfAbsent( username, "wait", waitingPlayers ) 
         }
     }
@@ -105,10 +110,7 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
 
 object Game {
 
-    val playerMax = 1
-
-    var XMAX = 600
-    var YMAX = 1000
+    val playerMax = 5
 
     def playerUsername( username: String ) = {
         "playerWithUsername-" + username

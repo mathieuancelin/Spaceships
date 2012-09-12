@@ -27,6 +27,8 @@ class ActorPlayer( name: String, var posX: Double = 300.0, var posY: Double = 30
 
     //val spaceShip = new SpaceShip( posX, posY )
 
+    val game = currentGame.get
+
     var alive = true
 
     def receive = {
@@ -37,13 +39,13 @@ class ActorPlayer( name: String, var posX: Double = 300.0, var posY: Double = 30
             spaceShip.targetVel.multiplyEq( 0.2 )
             spaceShip.update()
             if ( spaceShip.pos.x < 1 ) {
-                spaceShip.pos.x = Game.XMAX
-            } else if ( spaceShip.pos.x > Game.XMAX) {
+                spaceShip.pos.x = game.XMAX
+            } else if ( spaceShip.pos.x > game.XMAX) {
                 spaceShip.pos.x = 1
             }
             if ( spaceShip.pos.y < 1) {
-                spaceShip.pos.y = Game.YMAX
-            } else if ( spaceShip.pos.y > Game.YMAX ) {
+                spaceShip.pos.y = game.YMAX
+            } else if ( spaceShip.pos.y > game.YMAX ) {
                 spaceShip.pos.y = 1
             }
             posX = spaceShip.pos.x
