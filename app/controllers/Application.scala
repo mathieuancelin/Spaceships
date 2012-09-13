@@ -49,14 +49,23 @@ object Application extends Controller {
     }
 
     def mobilePad(username: String) = Action { implicit request =>
-        Ok( views.html.control( username ) )
+        currentGame.map { game =>
+            Ok( views.html.control( username + "-" + System.nanoTime() ) )
+        }.getOrElse(
+            Redirect( routes.Application.mobileStart() )
+        )
     }
 
     def startGame() = Action { implicit request =>
         usernameForm.bindFromRequest.fold (
             formWithErrors => BadRequest( "You need to post a 'username' value!" ),
             { username =>
-                Redirect("/mobile/" + username.replace(" ", "").replace("-", "") + "-" + System.nanoTime() + "/pad")
+                currentGame.map { game =>
+                    //Redirect("/mobile/" + username.replace(" ", "").replace("-", "") + "-" + System.nanoTime() + "/pad")
+                    Redirect("/mobile/" + Game.sanitizeUsername( username ) + "/pad")
+                }.getOrElse(
+                    Redirect( routes.Application.mobileStart() )
+                )
             } 
         )
     }

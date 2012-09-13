@@ -94,6 +94,7 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
             // stop game and call winner
             val p = activePlayers.entrySet().iterator().next().getValue()
             p.enumerator.push( JsObject( JList( "action" -> JsString( "win" ) ) ) )
+            Application.currentGame = None
             "winner:" + p.username
         } else { 
             "continue"
@@ -111,7 +112,11 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
 
 object Game {
 
-    val playerMax = 3
+    val playerMax = 50
+
+    val anon = "Anon"
+
+    var counter = 0
 
     def playerUsername( username: String ) = {
         "playerWithUsername-" + username
@@ -120,5 +125,15 @@ object Game {
     def apply( enumerator: PushEnumerator[JsValue] ): Game = {
         val game = new Game( enumerator ) 
         game
+    }
+
+    def sanitizeUsername( username: String) = {
+        val sane = username.replace(" ", "").replace("-", "").replaceAll("[^a-zA-Z0-9]", "").trim()
+        if (sane.isEmpty()) {
+            counter = counter + 1
+            anon + counter
+        } else {
+            sane
+        }
     }
 }

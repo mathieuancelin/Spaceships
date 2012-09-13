@@ -28,12 +28,18 @@
             }
             body {
                 background-color: #000000;
+                /*background-image: -webkit-radial-gradient(600px 300px, circle, #778, #011 60%);
+                background-image: -moz-radial-gradient(600px 300px, circle, #444, #000 60%);
+                background-image: -o-radial-gradient(600px 300px, circle, #444, #000 60%);
+                background-image: radial-gradient(600px 300px, circle, #444, #000 60%);*/
+                color: #fff;
+                margin: 0px;
+            }
+            .back {
                 background-image: -webkit-radial-gradient(600px 300px, circle, #778, #011 60%);
                 background-image: -moz-radial-gradient(600px 300px, circle, #444, #000 60%);
                 background-image: -o-radial-gradient(600px 300px, circle, #444, #000 60%);
                 background-image: radial-gradient(600px 300px, circle, #444, #000 60%);
-                color: #fff;
-                margin: 0px;
             }
             canvas {
                 display:block; 
@@ -46,11 +52,13 @@
             }
         </style>
     </head>
-    <body>
+    <body class="back">
     <div id="win" style="display:none;"><h1></h1><br/><br/><a class="btn btn-primary" href="@routes.Application.index()">New game</a></div>
     <script>
 
         var debug = false
+
+        var board;
 
         var canvas,
             c, // c is the canvas' context 2D
@@ -62,7 +70,7 @@
             leftTouchStartPos = new Vector2(0,0),
             leftVector = new Vector2(0,0);   
         
-        setupCanvas();
+        
 
         var mouseX, mouseY, 
             // is this running in a touch capable environment?
@@ -77,7 +85,8 @@
         var players = new HashMap()
         var playerBullets = new HashMap()
 
-        setInterval(draw, 1000/35); 
+        //setupCanvas();
+        //setInterval(draw, 1000/35); 
 
         function resetCanvas (e) {  
             // resize the canvas - but remember - this clears the canvas too. 
@@ -127,10 +136,12 @@
                     if (dead) {
                         $.post("/mobile/" + elem.name + "/pad/kill", function(data) {
                             if (data.split(":")[0] == "winner") {
-                                // TODO : jquery add win div
                                 $('#win h1').html("The winner is : " + data.split(":")[1].split("-")[0])
                                 $('#board').hide()
-                                $('#board').html("")
+                                board.hide()
+                                $('canvas').remove()
+                                $('.container').remove()
+                                $('body').attr("class", "")
                                 $('#win').show()
                             }
                         })
@@ -279,6 +290,9 @@
                     }
                 }
             }
+            setupCanvas();
+            board = $('#board')
+            setInterval(draw, 1000/35);
             $.post('@routes.Application.defineCanvasSize()', { width: canvas.width, height: canvas.height })
         })
         </script>
