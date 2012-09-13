@@ -142,7 +142,7 @@ ShipMoving = function(x,y) {
 		var downy = (this.pos.y - 10)
 		var upy = (this.pos.y + 10)
 		if (vx > downx && vx < upx && vy > downy  && vy < upy ) {
-			console.log("[" + name + "]I'm dying !!!")
+			//console.log("[" + name + "]I'm dying !!!")
 			drawing = false;
 			pos.x = -30;
 			pos.y = -30;

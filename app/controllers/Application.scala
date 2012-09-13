@@ -50,7 +50,9 @@ object Application extends Controller {
 
     def mobilePad(username: String) = Action { implicit request =>
         currentGame.map { game =>
-            Ok( views.html.control( username + "-" + System.nanoTime() ) )
+            val finalUsername = username + "-" + System.nanoTime()
+            Logger("Application").info("New player '" + finalUsername + "'")
+            Ok( views.html.control( finalUsername ) )
         }.getOrElse(
             Redirect( routes.Application.mobileStart() )
         )
