@@ -1,4 +1,4 @@
-Bullet = function(x, y, angle) {
+Bullet = function(x, y, angle, from) {
 	
 	var speed = 10; 
 	
@@ -26,7 +26,7 @@ Bullet = function(x, y, angle) {
 	
 	};
 	
-	this.reset = function(x, y, angle) {
+	this.reset = function(x, y, angle,from) {
 		
 		this.pos = new Vector2(x,y);
 		var unitv = new Vector2(1,0); 
@@ -41,11 +41,12 @@ Bullet = function(x, y, angle) {
 		this.pos.plusEq(unitv); 
 
 		this.enabled = true; 
+		this.from = from
 
 		this.life = 50; 
 	
 	}
 	
-	this.reset(x,y,angle); 
+	this.reset(x,y,angle,from); 
 	
 };

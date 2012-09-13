@@ -90,7 +90,12 @@ class Game( enumerator: PushEnumerator[JsValue] ) {
             }
         }
         pushWaitingList( Application.playersEnumerator )
-        if (activePlayers.size == 1 && waitingPlayers.isEmpty()) {
+        if (out.isDefined && activePlayers.isEmpty() && waitingPlayers.isEmpty()) {
+            Application.currentGame = None
+            "nowinner"
+        } else 
+        if (out.isDefined && activePlayers.size == 1 && waitingPlayers.isEmpty()) {
+        //if (activePlayers.size == 1 && waitingPlayers.isEmpty()) {
             // stop game and call winner
             val p = activePlayers.entrySet().iterator().next().getValue()
             p.enumerator.push( JsObject( JList( "action" -> JsString( "win" ) ) ) )

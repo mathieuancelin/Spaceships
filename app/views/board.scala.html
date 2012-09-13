@@ -132,12 +132,21 @@
                     spareBullets.push(bullet); 
                 }     
                 players.each(function(index, elem) {
-                    var dead = elem.around(bullet.pos.x, bullet.pos.y)
+                    var dead = elem.around(bullet.pos.x, bullet.pos.y, bullet.from)
                     if (dead) {
-                        players.remove( elem.name )
+                        //players.remove( elem.name )
                         $.post("/mobile/" + elem.name + "/pad/kill", function(data) {
                             if (data.split(":")[0] == "winner") {
                                 $('#win h1').html("The winner is : " + data.split(":")[1].split("-")[0])
+                                $('#board').hide()
+                                board.hide()
+                                $('canvas').remove()
+                                $('.container').remove()
+                                $('body').attr("class", "")
+                                $('#win').show()
+                            }
+                            if (data == "nowinner") {
+                                 $('#win h1').html("There is no winner :( ")
                                 $('#board').hide()
                                 board.hide()
                                 $('canvas').remove()
@@ -198,13 +207,13 @@
             } 
         }
 
-        function makeBullet(x, y, angle, velx, vely) {
+        function makeBullet(x, y, angle, velx, vely, name) {
             var bullet;
             if(spareBullets.length>0) {
                 bullet = spareBullets.pop(); 
-                bullet.reset(x, y, angle); 
+                bullet.reset(x, y, angle, name); 
             } else {
-                bullet = new Bullet(x, y, angle); 
+                bullet = new Bullet(x, y, angle, name); 
                 bullets.push(bullet);
             }
             bullet.vel.plusEq( new Vector2(velx, vely)); 
@@ -253,7 +262,7 @@
                     }
                 }
                 if (data.action == "fire") {
-                    makeBullet(data.x, data.y, data.angle, data.velx, data.vely)
+                    makeBullet(data.x, data.y, data.angle, data.velx, data.vely, data.name)
                 }
                 if (data.action == "shoot") {
                     if (data.disabled == "true") {

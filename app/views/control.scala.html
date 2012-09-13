@@ -43,8 +43,8 @@
         </style>
     </head>
     <body>
-        <div id="win" style="display:none;"><h1><h1>YOU WIN !!!</h1><br/><br/><a class="btn btn-primary" href="@routes.Application.mobilePad(username)">Play again</a></div>
-        <div id="lose" style="display:none;"><br/><h1>YOU'RE DEAD !!!</h1><br/><br/><a class="btn btn-primary" href="@routes.Application.mobilePad(username)">Play again</a></div>
+        <div id="win" style="display:none;"><h1><h1>YOU WIN !!!</h1><br/><br/><a class="btn btn-primary" href="@routes.Application.mobilePad(username.split("-").apply(0))">Play again</a></div>
+        <div id="lose" style="display:none;"><br/><h1>YOU'RE DEAD !!!</h1><br/><br/><a class="btn btn-primary" href="@routes.Application.mobilePad(username.split("-").apply(0))">Play again</a></div>
          <div id="wait" style="display:none;"><br/><h1>Waiting to join current game ...</h1></div>
         <script>
 

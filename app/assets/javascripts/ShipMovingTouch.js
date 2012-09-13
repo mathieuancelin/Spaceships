@@ -136,7 +136,10 @@ ShipMoving = function(x,y) {
 		}
 	};
 
-	this.around = function(vx, vy) {
+	this.around = function(vx, vy, from) {
+		if (from == this.name) {
+			return false
+		}
 		var downx = (this.pos.x - 10)
 		var upx = (this.pos.x + 10)
 		var downy = (this.pos.y - 10)
